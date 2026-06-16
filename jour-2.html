@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM Symfony — Jour 2 · Helfrich × DonkeyCode</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --card2:#1f232c; --line:#2a2f3a;
+    --txt:#e7e9ee; --muted:#9aa3b2; --accent:#6aa6ff; --accent2:#8b5cf6;
+    --ok:#22c55e; --okbg:#0e2a18; --ko:#ef4444; --kobg:#2a1212;
+    --chip:#232838;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #1a1f2b 0%, var(--bg) 60%);
+    color:var(--txt); font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:32px 16px 80px;
+  }
+  .app{width:100%; max-width:860px}
+  header.top{display:flex; align-items:center; gap:12px; margin-bottom:22px}
+  .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b0d12}
+  header.top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+  header.top .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 28px 24px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35)}
+
+  /* progress */
+  .bar{height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin:0 0 18px}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:13px;color:var(--muted)}
+  .chip{display:inline-block;background:var(--chip);color:#c9d4ea;border:1px solid var(--line);
+    padding:4px 11px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.2px}
+
+  .q{font-size:20px;font-weight:650;margin:6px 0 18px;line-height:1.4}
+  .q code, .opt code, .exp code{background:#0c0e13;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.9em;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;color:#a8c7ff}
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;cursor:pointer;
+    background:var(--card2);border:1.5px solid var(--line);border-radius:12px;padding:13px 15px;color:var(--txt);
+    font-size:15px;transition:border-color .15s,background .15s,transform .05s}
+  .opt:hover:not(.locked){border-color:#3a4356;background:#222735}
+  .opt:active:not(.locked){transform:translateY(1px)}
+  .opt .key{flex:0 0 26px;height:26px;border-radius:7px;background:#0c0e13;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--muted)}
+  .opt.correct{border-color:var(--ok);background:var(--okbg)}
+  .opt.correct .key{background:var(--ok);color:#06210f;border-color:var(--ok)}
+  .opt.wrong{border-color:var(--ko);background:var(--kobg)}
+  .opt.wrong .key{background:var(--ko);color:#2a0a0a;border-color:var(--ko)}
+  .opt.locked{cursor:default}
+  .opt.dim{opacity:.55}
+
+  .exp{margin-top:18px;border-left:3px solid var(--accent);background:#11151d;border-radius:0 12px 12px 0;
+    padding:14px 16px;font-size:14.5px;color:#d4dae6;display:none}
+  .exp.show{display:block;animation:fade .25s ease}
+  .exp .verdict{font-weight:700;margin-bottom:6px}
+  .exp .verdict.good{color:var(--ok)} .exp .verdict.bad{color:var(--ko)}
+  .exp .ref{margin-top:8px;font-size:12.5px;color:var(--muted)}
+  .exp .ref a{color:var(--accent)}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+  .hint{font-size:12.5px;color:var(--muted)}
+  button.btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0d12;border:0;border-radius:11px;
+    padding:11px 20px;font-weight:700;font-size:14.5px;cursor:pointer;transition:opacity .15s,transform .05s}
+  button.btn:hover{opacity:.92} button.btn:active{transform:translateY(1px)}
+  button.btn[disabled]{opacity:.35;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+
+  /* start / end */
+  .center{text-align:center}
+  .big{font-size:30px;font-weight:800;margin:6px 0 4px}
+  .lead{color:var(--muted);font-size:15px;max-width:620px;margin:0 auto 22px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0 26px}
+  .score{font-size:54px;font-weight:850;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;margin:8px 0}
+  .bytheme{text-align:left;margin:20px auto;max-width:560px}
+  .bytheme .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+  .bytheme .row span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
+  .review{text-align:left;margin:22px auto 0;max-width:640px}
+  .review h3{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:0 0 10px}
+  .review .item{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:9px;font-size:14px}
+  .review .item b{color:#ffd9d9;font-weight:600}
+  footer{margin-top:26px;text-align:center;color:var(--muted);font-size:12px}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="logo">DC</div>
+    <div>
+      <h1>QCM Symfony — Jour 2</h1>
+      <div class="sub">Formation PHP / Symfony avancé · Helfrich × DonkeyCode · Vérification des acquis</div>
+    </div>
+  </header>
+
+  <!-- START -->
+  <section id="start" class="card center">
+    <div class="big">Prêt à valider le Jour 2 ?</div>
+    <p class="lead">QCM de niveau <b>avancé</b>, façon préparation à une certification PHP/Symfony :
+       questions de jugement, distracteurs subtils, une seule bonne réponse, correction immédiate et sourcée.
+       Couvre l’<b>injection de dépendances</b>, l’architecture (services/repositories),
+       <b>Doctrine &amp; Propel</b>, l’<b>optimisation SQL</b> et la <b>performance web</b> (routing, HTTP cache, cache applicatif).</p>
+    <div class="pills" id="startPills"></div>
+    <button class="btn" id="startBtn">Commencer le QCM →</button>
+    <footer>Navigation clavier : touches <b>1–4</b> pour répondre · <b>Entrée</b> pour continuer</footer>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="card hide">
+    <div class="bar"><i id="prog"></i></div>
+    <div class="meta">
+      <span class="chip" id="theme">—</span>
+      <span id="counter">1 / 1</span>
+    </div>
+    <div class="q" id="question"></div>
+    <div class="opts" id="opts"></div>
+    <div class="exp" id="exp"></div>
+    <div class="actions">
+      <span class="hint" id="hint">Choisis une réponse…</span>
+      <button class="btn" id="nextBtn" disabled>Suivant →</button>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="card center hide">
+    <div class="big">Résultat</div>
+    <div class="score" id="finalScore">0 / 0</div>
+    <p class="lead" id="finalMsg"></p>
+    <div class="bytheme" id="byTheme"></div>
+    <div class="review" id="reviewWrap"></div>
+    <div style="margin-top:26px">
+      <button class="btn ghost" id="restartBtn">↺ Recommencer</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ============================================================================
+   QCM Symfony — Jour 2 (slides 126–230)
+   Sources de vérité : php.net (migrations) + symfony.com (doc officielle)
+   Chaque question est opérationnelle : pas de théorie gratuite.
+   ========================================================================== */
+const QUESTIONS = [
+/* ---------------------------------------------------------------- Injection de dépendances */
+{
+  theme:"Injection · Autowiring",
+  q:`Une interface <code>MailerInterface</code> a <b>deux</b> implémentations enregistrées comme services. Vous type-hintez <code>MailerInterface $mailer</code> dans un autre service. Que fait l'autowiring ?`,
+  options:[
+    "Il injecte la première implémentation par ordre alphabétique",
+    "Il échoue : l'autowiring résout par <b>type</b> et plusieurs candidats pour une même interface sont ambigus — il faut un alias par défaut ou un autowiring nommé (<code>#[Target]</code> / argument bindé)",
+    "Il injecte automatiquement un tableau des deux implémentations",
+    "Il génère un proxy qui délègue aux deux à la fois"
+  ],
+  correct:1,
+  exp:`L'autowiring résout par <b>type</b> (classe/interface). Avec plusieurs candidats pour une interface, Symfony ne peut pas trancher ⇒ erreur « <i>multiple services</i> ». On lève l'ambiguïté avec un <b>alias</b> (l'interface pointe vers le service par défaut) ou un <b>autowiring nommé</b> (<code>#[Target('async')]</code>, ou binding explicite de l'argument).`,
+  ref:["symfony.com — Autowiring","https://symfony.com/doc/current/service_container/autowiring.html"]
+},
+{
+  theme:"Injection · Autoconfigure",
+  q:`Vous créez <code>class AuditSubscriber implements EventSubscriberInterface</code>. Avec <code>autoconfigure: true</code> (défaut), que se passe-t-il ?`,
+  options:[
+    "Rien : il faut déclarer manuellement le tag <code>kernel.event_subscriber</code> dans <code>services.yaml</code>",
+    "Symfony le <b>tague automatiquement</b> <code>kernel.event_subscriber</code> car il implémente l'interface connue — aucune config à écrire",
+    "Le subscriber est exécuté une fois au build puis figé en cache",
+    "Il est ignoré tant qu'on ne l'annote pas <code>#[AsEventSubscriber]</code>"
+  ],
+  correct:1,
+  exp:`<code>autoconfigure</code> applique les tags <b>selon les interfaces/classes</b> implémentées : <code>EventSubscriberInterface</code> → <code>kernel.event_subscriber</code>, <code>VoterInterface</code> → <code>security.voter</code>, une <code>Command</code> → <code>console.command</code>, etc. C'est ce qui supprime la config manuelle dans les projets modernes.`,
+  ref:["symfony.com — Autoconfiguration","https://symfony.com/doc/current/service_container.html#the-autoconfigure-option"]
+},
+{
+  theme:"Injection · Cycle de vie",
+  q:`Par défaut, deux services qui dépendent chacun de <code>ClockInterface</code> reçoivent-ils la <b>même</b> instance ?`,
+  options:[
+    "Non, chaque injection crée une nouvelle instance",
+    "Oui : les services sont <code>shared</code> par défaut (une instance par conteneur) ; pour une instance neuve à chaque injection, il faut <code>shared: false</code>",
+    "Cela dépend d'un scope <code>request</code> ou <code>prototype</code> à configurer",
+    "Oui, mais seulement si le service est <code>public</code>"
+  ],
+  correct:1,
+  exp:`Les services sont <b>partagés</b> (<code>shared</code>) par défaut : le conteneur instancie une fois et réinjecte la même instance — c'est le « scope » par défaut. <code>shared: false</code> redonne une instance neuve à chaque récupération. (Les anciens scopes <code>request</code>/<code>prototype</code> n'existent plus en Symfony moderne.)`,
+  ref:["symfony.com — Shared services","https://symfony.com/doc/current/service_container/shared.html"]
+},
+{
+  theme:"Injection · Arguments scalaires",
+  q:`Un service a besoin d'une clé d'API (<code>string</code>) en plus de ses dépendances objets. Pourquoi l'autowiring ne suffit pas — et que faire ?`,
+  options:[
+    "L'autowiring injecte les scalaires depuis l'environnement automatiquement",
+    "L'autowiring ne résout que des types <b>objets/interfaces</b> : il faut fournir le scalaire explicitement (<code>#[Autowire('%env(API_KEY)%')]</code> sur l'argument, ou <code>bind</code> dans <code>services.yaml</code>)",
+    "Il faut rendre la clé <code>public</code> dans le conteneur",
+    "Il faut typer le paramètre <code>mixed</code> pour que Symfony l'injecte"
+  ],
+  correct:1,
+  exp:`L'autowiring résout par <b>type de classe/interface</b> ; un <code>string</code>/<code>int</code> n'a pas de service à résoudre ⇒ on le fournit explicitement : attribut <code>#[Autowire('%env(API_KEY)%')]</code> sur l'argument, ou <code>bind</code>/<code>arguments</code> en config.`,
+  ref:["symfony.com — Bind arguments","https://symfony.com/doc/current/service_container.html#binding-arguments-by-name-or-type"]
+},
+{
+  theme:"Injection · Tagged services",
+  q:`Vous voulez injecter <b>tous</b> les services <code>ExporterInterface</code> dans un <code>ExporterRegistry</code> (pour choisir le bon format à l'exécution). Approche idiomatique ?`,
+  options:[
+    "Les lister un par un dans le constructeur du registry",
+    "Les tagger (<code>#[AutoconfigureTag('app.exporter')]</code> sur l'interface) et injecter un <code>iterable</code> taggé (<code>#[AutowireIterator('app.exporter')]</code> ou <code>tagged_iterator</code>)",
+    "Faire <code>$container->get()</code> dans une boucle au runtime",
+    "Les déclarer <code>public</code> et les scanner par réflexion"
+  ],
+  correct:1,
+  exp:`Pattern registre/stratégie : on <b>tague</b> les exporters — typiquement via <code>#[AutoconfigureTag('app.exporter')]</code> posé sur l'interface (ou <code>_instanceof</code> en config) — puis on injecte un <code>iterable</code> <b>taggé</b> avec <code>#[AutowireIterator('app.exporter')]</code> ou <code>tagged_iterator</code> (l'argument est le <b>nom du tag</b>, pas un FQCN). Le registry itère et choisit, sans connaître les implémentations à l'écriture.`,
+  ref:["symfony.com — Tagged services","https://symfony.com/doc/current/service_container/tags.html#reference-tagged-services"]
+},
+{
+  theme:"Injection · ValueResolver",
+  q:`Comment l'argument de contrôleur <code>#[MapRequestPayload] CreateUserDto $dto</code> est-il construit à partir de la requête ?`,
+  options:[
+    "Symfony fait <code>new CreateUserDto()</code> et hydrate les propriétés publiques par réflexion",
+    "Un <b>value resolver</b> (lié à l'attribut) <b>désérialise</b> le corps en DTO et le <b>valide</b> avant l'appel du contrôleur ; erreur de validation ⇒ 422, JSON malformé ⇒ 400",
+    "Le contrôleur doit lire <code>$request->toArray()</code> lui-même",
+    "C'est <code>kernel.view</code> qui construit le DTO après le contrôleur"
+  ],
+  correct:1,
+  exp:`La résolution des arguments passe par des <b>ValueResolver</b> (ArgumentResolver). <code>#[MapRequestPayload]</code> déclenche un resolver qui <b>désérialise</b> le corps en DTO puis le <b>valide</b> : erreurs de validation ⇒ <b>422</b> (ConstraintViolationList sérialisée), corps malformé ⇒ <b>400</b>, format non supporté ⇒ 415. Tout ça avant l'exécution du contrôleur.`,
+  ref:["symfony.com — Mapping request to typed object","https://symfony.com/doc/current/controller.html#mapping-the-request-to-a-typed-object"]
+},
+{
+  theme:"Injection · Services lazy",
+  q:`Un service A dépend d'un service B coûteux à instancier mais rarement utilisé dans A. Comment éviter de payer la construction de B à chaque fois, sans réarchitecturer ?`,
+  options:[
+    "Mettre B en <code>shared: false</code>",
+    "Déclarer la dépendance B <b>lazy</b> (<code>#[Lazy]</code> / <code>lazy: true</code>) : Symfony injecte un <b>proxy</b> et n'instancie réellement B qu'au premier appel",
+    "Injecter B via <code>$container->get()</code> au besoin",
+    "Rendre B <code>public</code>"
+  ],
+  correct:1,
+  exp:`Un service <b>lazy</b> est injecté sous forme de <b>proxy</b> ; l'instanciation réelle est différée au premier accès. Idéal pour une dépendance lourde et peu sollicitée, sans casser l'injection par constructeur. <code>$container->get()</code> serait du <i>service location</i> (anti-pattern).`,
+  ref:["symfony.com — Lazy services","https://symfony.com/doc/current/service_container/lazy_services.html"]
+},
+/* ---------------------------------------------------------------- Architecture */
+{
+  theme:"Architecture · Responsabilités",
+  q:`Où placer une méthode <code>findActiveSubscribers()</code> (requête) et la logique « envoyer la campagne » ?`,
+  options:[
+    "Les deux dans le Repository, pour tout centraliser autour de l'entité",
+    "La requête dans le <b>Repository</b> (accès données), l'orchestration d'envoi dans un <b>Service</b> métier qui consomme le repository",
+    "Les deux dans le contrôleur",
+    "Les deux dans l'entité (style Active Record)"
+  ],
+  correct:1,
+  exp:`Séparation des responsabilités : le <b>Repository</b> encapsule les <b>requêtes</b> (renvoie entités/DTO), le <b>Service</b> porte la <b>logique métier</b> et orchestre. Mettre l'envoi dans le repository le rend non réutilisable, difficile à tester, et viole le SRP.`,
+  ref:["symfony.com — Repositories as services","https://symfony.com/doc/current/doctrine.html#querying-for-objects-the-repository"]
+},
+{
+  theme:"Architecture · Dépendances",
+  q:`Dans un service métier, vaut-il mieux injecter <code>EntityManagerInterface</code> puis <code>->getRepository(User::class)</code>, ou injecter directement <code>UserRepository</code> ?`,
+  options:[
+    "Toujours l'EntityManager : c'est plus flexible",
+    "Injecter le <b>repository</b> (ou une interface dédiée) : dépendance explicite, typée, mockable ; l'EM générique masque ce dont le service a réellement besoin",
+    "Peu importe, c'est strictement identique",
+    "Toujours via <code>$container->get()</code> pour la performance"
+  ],
+  correct:1,
+  exp:`Injecter le <b>repository</b> (idéalement derrière une interface) rend la dépendance <b>explicite et typée</b> (DIP/ISP) et facilite les tests (mock ciblé). <code>EntityManagerInterface->getRepository()</code> est un accès générique qui cache l'intention et complique le mocking.`,
+  ref:["symfony.com — Services & DI","https://symfony.com/doc/current/service_container.html"]
+},
+/* ---------------------------------------------------------------- Doctrine */
+{
+  theme:"Doctrine · N+1",
+  q:`Vous bouclez sur 100 <code>Order</code> et lisez <code>$order->getCustomer()->getName()</code> (relation lazy). Combien de requêtes, et le correctif ?`,
+  options:[
+    "1 requête : Doctrine charge tout d'un coup",
+    "1 (orders) + jusqu'à 100 (un SELECT customer par order via le proxy) = problème <b>N+1</b> ; correctif : <b>fetch join</b> (<code>leftJoin + addSelect</code> / DQL <code>JOIN FETCH</code>)",
+    "100 requêtes, irréductible avec un ORM",
+    "2 requêtes grâce au lazy loading"
+  ],
+  correct:1,
+  exp:`C'est le <b>N+1</b> : 1 requête pour les orders + 1 par customer accédé via le proxy lazy. On le résout par un <b>fetch join</b> : <code>->leftJoin('o.customer','c')->addSelect('c')</code> (ou DQL <code>JOIN FETCH</code>) pour charger en une seule requête. Un <code>fetch=EAGER</code> global est rarement la bonne réponse.`,
+  ref:["doctrine — Fetch joins / N+1","https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/dql-doctrine-query-language.html#joins"]
+},
+{
+  theme:"Doctrine · DQL",
+  q:`<code>SELECT u FROM App\\Entity\\User u WHERE u.isActive = true</code> (DQL). Qu'est-ce qui est exact ?`,
+  options:[
+    "DQL manipule directement les tables et colonnes SQL",
+    "DQL manipule des <b>entités et leurs propriétés</b> (objet/champ), pas des tables/colonnes ; Doctrine le traduit en SQL selon le mapping",
+    "DQL ne supporte pas les conditions WHERE",
+    "DQL est du SQL natif propre à MySQL"
+  ],
+  correct:1,
+  exp:`Le <b>DQL</b> raisonne sur le modèle <b>objet</b> (noms d'entités complets, propriétés), pas sur le schéma relationnel. Doctrine génère le SQL réel d'après le mapping. Pour du SQL natif, on passe par <code>NativeQuery</code> / la <code>Connection</code> DBAL.`,
+  ref:["doctrine — DQL","https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/dql-doctrine-query-language.html"]
+},
+{
+  theme:"Doctrine · Sécurité",
+  q:`Avec le QueryBuilder, pourquoi <code>->where("u.email = '".$email."'")</code> est-il à proscrire au profit de <code>->where('u.email = :email')->setParameter('email', $email)</code> ?`,
+  options:[
+    "Pour une simple question de style",
+    "La concaténation ouvre une <b>injection SQL</b> ; <code>setParameter</code> passe par une requête <b>préparée</b> (échappement + plan réutilisable)",
+    "<code>setParameter</code> est plus rapide car il met le résultat en cache",
+    "La concaténation ne compile pas en DQL"
+  ],
+  correct:1,
+  exp:`Concaténer une variable dans la requête = <b>faille d'injection SQL</b>. <code>setParameter</code> lie la valeur via une <b>requête préparée</b> : échappement correct et plan d'exécution réutilisable. Règle non négociable.`,
+  ref:["doctrine — QueryBuilder parameters","https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/query-builder.html#binding-parameters-to-your-query"]
+},
+{
+  theme:"Doctrine · Lifecycle",
+  q:`Vous voulez positionner <code>updatedAt = now()</code> à chaque modification d'entité. Quel hook — et quel piège ?`,
+  options:[
+    "<code>postLoad</code>, appelé à chaque chargement",
+    "<code>preUpdate</code> (avant l'UPDATE des entités modifiées) — piège : il opère sur le <b>changeset déjà calculé</b> (on modifie une valeur via <code>PreUpdateEventArgs::setNewValue()</code>), et changer une association y est délicat (d'où le recours fréquent à un behavior Timestampable)",
+    "<code>prePersist</code> suffit, il est appelé à chaque flush",
+    "Aucun hook ne permet de modifier l'entité avant écriture"
+  ],
+  correct:1,
+  exp:`<code>prePersist</code> ne se déclenche qu'à la <b>première</b> persistance (INSERT). Pour les modifications, c'est <code>preUpdate</code>, mais il est restreint au <b>changeset</b> déjà calculé : on y modifie un champ via <code>PreUpdateEventArgs::setNewValue()</code>. Réintégrer un changement arbitraire relève plutôt de <code>onFlush</code> + <code>recomputeSingleEntityChangeSet()</code>. D'où l'usage répandu d'un behavior/trait Timestampable.`,
+  ref:["doctrine — Lifecycle events","https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/events.html#lifecycle-events"]
+},
+{
+  theme:"Doctrine · Schéma",
+  q:`Pour faire évoluer le schéma en <b>production</b>, quelle approche ?`,
+  options:[
+    "<code>doctrine:schema:update --force</code> à chaque déploiement",
+    "Des <b>migrations versionnées</b> (DoctrineMigrationsBundle) committées et rejouées ; <code>schema:update</code> est à proscrire en prod (drops, ordre non maîtrisé)",
+    "Modifier la base à la main puis ajuster le mapping",
+    "<code>schema:drop</code> puis <code>schema:create</code>"
+  ],
+  correct:1,
+  exp:`En prod : <b>migrations versionnées</b> (générées via <code>make:migration</code>/<code>diff</code>, appliquées par <code>migrations:migrate</code>), reproductibles et traçables. <code>schema:update --force</code> compare l'état courant au mapping sans historique ni garde-fou ⇒ dangereux. À réserver au prototypage local.`,
+  ref:["symfony.com — Doctrine migrations","https://symfony.com/doc/current/doctrine.html#migrations-creating-the-database-tables-schema"]
+},
+{
+  theme:"Doctrine · Hydratation",
+  q:`Export en <b>lecture seule</b> de 100 000 lignes (aucune modification). Quel mode d'hydratation privilégier ?`,
+  options:[
+    "L'hydratation objet par défaut, toujours la plus sûre",
+    "L'hydratation <code>ARRAY</code>/<code>SCALAR</code> (ou des DTO via <code>SELECT NEW</code>) : pas d'entités managées ⇒ bien moins de mémoire/CPU, et itérer/paginer (<code>toIterable</code>)",
+    "Tout charger puis <code>clear()</code> à la fin",
+    "Augmenter <code>memory_limit</code> et garder l'hydratation objet"
+  ],
+  correct:1,
+  exp:`L'hydratation <b>objet</b> crée des entités <b>managées</b> (suivi de changement) : coûteux en mémoire/CPU. Pour du <b>read-only</b> massif, l'hydratation <code>ARRAY</code>/<code>SCALAR</code> ou la projection en DTO (<code>SELECT NEW Dto(...)</code>) évite l'UnitOfWork. Penser aussi à <code>toIterable()</code>/pagination pour ne pas tout charger en mémoire.`,
+  ref:["doctrine — Hydration modes","https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/dql-doctrine-query-language.html#hydration-modes"]
+},
+{
+  theme:"Doctrine · Identifiants",
+  q:`Vous voulez des identifiants non séquentiels et exposables. Quel choix limite la fragmentation de l'index primaire ?`,
+  options:[
+    "UUID v4 (aléatoire) en clé primaire",
+    "Un UUID <b>ordonné dans le temps</b> (ex. UUID v7) : la quasi-monotonie limite les <i>page splits</i> du B-tree, contrairement à l'aléatoire (v4)",
+    "Un hash MD5 de la date de création",
+    "Peu importe : l'index gère l'aléatoire sans surcoût"
+  ],
+  correct:1,
+  exp:`Une clé primaire <b>aléatoire</b> (UUID v4) insère partout dans l'arbre B-tree ⇒ <b>page splits</b> et fragmentation à fort volume. Un UUID <b>ordonné</b> (v7, basé sur le temps) insère quasi en fin d'index (locality proche d'un auto-increment) tout en restant non devinable. Supporté via <code>symfony/uid</code> + type Doctrine.`,
+  ref:["symfony.com — UID component","https://symfony.com/doc/current/components/uid.html"]
+},
+/* ---------------------------------------------------------------- Propel vs Doctrine */
+{
+  theme:"Propel · Architecture",
+  q:`Différence d'architecture <b>fondamentale</b> entre Propel et Doctrine ?`,
+  options:[
+    "Propel = Data Mapper, Doctrine = Active Record",
+    "Propel = <b>Active Record</b> (l'objet se sauve lui-même : <code>$book->save()</code>), Doctrine = <b>Data Mapper</b> (persistance déléguée à l'EntityManager : <code>persist()</code> + <code>flush()</code>)",
+    "Les deux suivent le pattern Active Record",
+    "Aucune différence d'architecture, seulement de syntaxe"
+  ],
+  correct:1,
+  exp:`C'est <b>la</b> distinction : Propel suit l'<b>Active Record</b> (l'entité connaît sa persistance : <code>$obj->save()</code>/<code>->delete()</code>), Doctrine le <b>Data Mapper</b> (l'entité est ignorante ; l'<code>EntityManager</code> gère via <code>persist()</code>/<code>flush()</code> et l'UnitOfWork). Cela change tout le <i>mental model</i> lors d'une migration.`,
+  ref:["martinfowler.com — Active Record vs Data Mapper","https://martinfowler.com/eaaCatalog/dataMapper.html"]
+},
+{
+  theme:"Propel · Génération",
+  q:`Avec Propel2, d'où viennent les classes de modèle (<code>Book</code>, <code>BookQuery</code>) ?`,
+  options:[
+    "Elles sont écrites entièrement à la main",
+    "Elles sont <b>générées</b> à partir du <code>schema.xml</code> par une étape de build Propel : classes de <b>base</b> régénérables + classes <b>filles</b> éditables",
+    "Elles sont déduites au runtime par réflexion sur la base",
+    "Elles proviennent d'attributs PHP sur les entités, comme Doctrine"
+  ],
+  correct:1,
+  exp:`Propel <b>génère</b> le code modèle depuis <code>schema.xml</code> (build) : des classes de <b>base</b> régénérables (à ne pas modifier) et des classes <b>filles</b> où l'on ajoute le métier. Doctrine, lui, mappe via attributs/XML/YAML sans génération de classes d'entités.`,
+  ref:["propelorm.org — Build","https://propelorm.org/documentation/02-buildtime.html"]
+},
+{
+  theme:"Propel · Migration",
+  q:`En migrant du code Propel vers Doctrine, quel réflexe doit <b>disparaître</b> ?`,
+  options:[
+    "Utiliser des entités typées",
+    "Appeler <code>$entity->save()</code> / <code>$entity->delete()</code> sur l'objet : en Doctrine on passe par <code>EntityManager::persist()/remove()</code> puis un <code>flush()</code>",
+    "Écrire des requêtes pour lire les données",
+    "Définir des relations entre entités"
+  ],
+  correct:1,
+  exp:`Le piège n°1 : l'<b>Active Record</b> Propel (<code>$obj->save()</code>) n'existe pas en Doctrine. On <b>persiste</b>/<b>supprime</b> via l'<code>EntityManager</code> et un <b>flush()</b> unique en fin d'unité de travail (transaction). Penser « unit of work », pas « objet auto-sauvegardé ».`,
+  ref:["doctrine — Working with objects","https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/working-with-objects.html"]
+},
+/* ---------------------------------------------------------------- Optimisation SQL */
+{
+  theme:"SQL · EXPLAIN",
+  q:`Un <code>EXPLAIN</code> montre <code>type: ALL</code> et <code>rows: 2.1M</code> sur une requête filtrée par <code>WHERE status = 'paid'</code>. Diagnostic ?`,
+  options:[
+    "Tout va bien : <code>ALL</code> signifie que tous les index sont utilisés",
+    "C'est un <b>full table scan</b> (aucun index exploitable) : ajouter un index sur <code>status</code> (ou composite adapté) pour ne pas lire les 2,1M lignes",
+    "Il faut augmenter le buffer pool MySQL",
+    "<code>type: ALL</code> est normal pour tout SELECT"
+  ],
+  correct:1,
+  exp:`<code>type: ALL</code> = <b>parcours complet de table</b>, le pire cas : faute d'index exploitable sur le filtre. On ajoute un <b>index</b> sur la/les colonnes du <code>WHERE</code> (ici <code>status</code>), en tenant compte de la <b>sélectivité</b>. <code>EXPLAIN</code> doit alors montrer <code>ref</code>/<code>range</code>.`,
+  ref:["dev.mysql.com — EXPLAIN output","https://dev.mysql.com/doc/refman/8.0/en/explain-output.html"]
+},
+{
+  theme:"SQL · Index composite",
+  q:`Index composite <code>(tenant_id, created_at)</code>. Quelle requête en profite — et laquelle <b>pas du tout</b> ?`,
+  options:[
+    "<code>WHERE created_at > ?</code> seul en profite pleinement",
+    "<code>WHERE tenant_id = ? AND created_at > ?</code> en profite ; <code>WHERE created_at > ?</code> seul ne peut pas l'utiliser (règle du <b>préfixe le plus à gauche</b>)",
+    "Toute requête sur l'une des deux colonnes en profite également",
+    "L'ordre des colonnes dans l'index n'a aucune incidence"
+  ],
+  correct:1,
+  exp:`Règle du <b>préfixe le plus à gauche</b> : un index <code>(a,b)</code> sert <code>WHERE a</code> et <code>WHERE a AND b</code>, mais <b>pas</b> <code>WHERE b</code> seul. D'où l'importance de l'ordre : en tête la colonne filtrée en <b>égalité</b> (<code>tenant_id</code>), puis la colonne de plage/tri (<code>created_at</code>).`,
+  ref:["dev.mysql.com — Multiple-column indexes","https://dev.mysql.com/doc/refman/8.0/en/multiple-column-indexes.html"]
+},
+{
+  theme:"SQL · Projection",
+  q:`Une liste paginée n'affiche que <code>id, title, created_at</code>, mais la requête fait <code>SELECT *</code> sur une table avec un gros blob <code>content</code>. Optimisation ?`,
+  options:[
+    "Rien : <code>SELECT *</code> est toujours optimal",
+    "Sélectionner uniquement les colonnes utiles (projection/DTO), voire un <b>index couvrant</b> <code>(id, title, created_at)</code> permettant un <i>index-only scan</i> sans lire le blob",
+    "Ajouter <code>LIMIT 1000000</code>",
+    "Basculer la table en moteur MEMORY"
+  ],
+  correct:1,
+  exp:`Lire un gros <code>content</code> inutilement gonfle l'I/O et la mémoire. On <b>projette</b> les colonnes nécessaires (partial/DTO côté Doctrine) ; un <b>index couvrant</b> contenant exactement les colonnes lues permet un <i>index-only scan</i> (sans accès à la table). <code>SELECT *</code> est un anti-pattern sur les listes.`,
+  ref:["dev.mysql.com — Covering indexes","https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_covering_index"]
+},
+{
+  theme:"SQL · Pagination",
+  q:`Une pagination <code>LIMIT 20 OFFSET 100000</code> devient très lente sur une grosse table. Pourquoi, et l'alternative ?`,
+  options:[
+    "L'<code>OFFSET</code> est instantané ; le coût vient du <code>LIMIT</code>",
+    "Le moteur doit lire puis <b>jeter</b> les 100 000 lignes avant d'en renvoyer 20 ; alternative : <b>keyset pagination</b> (<code>WHERE id < :lastSeenId ORDER BY id DESC LIMIT 20</code>) sur une colonne indexée",
+    "Ajouter <code>SQL_CALC_FOUND_ROWS</code>",
+    "Créer un index « sur le LIMIT »"
+  ],
+  correct:1,
+  exp:`<code>OFFSET n</code> oblige le moteur à <b>lire puis ignorer</b> n lignes : coût croissant avec la profondeur. La <b>keyset pagination</b> (seek method) repart du dernier identifiant vu (<code>WHERE id < :last … LIMIT 20</code>) sur une colonne <b>indexée</b> ⇒ coût quasi constant, indépendant de la page.`,
+  ref:["use-the-index-luke.com — Pagination","https://use-the-index-luke.com/no-offset"]
+},
+/* ---------------------------------------------------------------- Performance web (routing + cache) */
+{
+  theme:"Perf web · Routing",
+  q:`Deux routes <code>/{slug}</code> (page) et <code>/{id}</code> (article numérique) entrent en conflit. Comment lever l'ambiguïté ?`,
+  options:[
+    "Impossible : il faut des préfixes d'URL différents",
+    "Contraindre les paramètres : <code>requirements: ['id' => '\\d+']</code> sur la route numérique ; l'<b>ordre</b> de déclaration départage aussi (la plus spécifique d'abord)",
+    "Renommer les paramètres de route",
+    "Mettre les deux routes dans le même contrôleur"
+  ],
+  correct:1,
+  exp:`On ajoute des <b>requirements</b> (regex) : <code>{id}</code> contraint à <code>\\d+</code> ne matchera pas un slug alphabétique. L'<b>ordre</b> compte aussi (première route qui matche gagne) : déclarer la plus spécifique avant la plus générique.`,
+  ref:["symfony.com — Route requirements","https://symfony.com/doc/current/routing.html#parameters-validation"]
+},
+{
+  theme:"Perf web · Routing",
+  q:`En prod, vous ajoutez une route mais l'URL renvoie 404. Réflexe ?`,
+  options:[
+    "Redémarrer le serveur de base de données",
+    "Vider/réchauffer le cache (<code>cache:clear</code>) : en prod les routes sont <b>compilées et mises en cache</b> ; <code>debug:router</code> permet de vérifier ce qui est réellement chargé",
+    "Passer <code>APP_ENV=dev</code> en production",
+    "Réécrire la route au format XML"
+  ],
+  correct:1,
+  exp:`En prod, le routeur est <b>compilé et caché</b> pour la performance : une nouvelle route n'est prise en compte qu'après <code>cache:clear</code>/warmup (au déploiement). <code>php bin/console debug:router</code> liste les routes effectives, <code>router:match /url</code> explique le matching.`,
+  ref:["symfony.com — debug:router","https://symfony.com/doc/current/routing.html#debugging-routes"]
+},
+{
+  theme:"Perf web · HTTP cache",
+  q:`Une réponse contient des données propres à l'utilisateur connecté. Quel en-tête de cache ?`,
+  options:[
+    "<code>Cache-Control: public, max-age=3600</code> pour accélérer",
+    "<code>Cache-Control: private</code> (voire <code>no-store</code> si sensible) : une réponse personnalisée ne doit pas être stockée par les caches <b>partagés</b> (proxy/CDN)",
+    "<code>Cache-Control: public, s-maxage=3600</code>",
+    "Aucun en-tête : le navigateur gère seul"
+  ],
+  correct:1,
+  exp:`Une réponse <b>personnalisée</b> ne doit jamais aller en cache <b>partagé</b> : <code>private</code> autorise au plus le cache navigateur de l'utilisateur, <code>no-store</code> interdit tout stockage (données sensibles). <code>public</code>/<code>s-maxage</code> sont réservés au contenu mutualisable entre utilisateurs.`,
+  ref:["symfony.com — HTTP Cache","https://symfony.com/doc/current/http_cache.html#public-vs-private-responses"]
+},
+{
+  theme:"Perf web · HTTP cache",
+  q:`Pour éviter de renvoyer un gros corps si le client a déjà la dernière version, on s'appuie sur…`,
+  options:[
+    "Uniquement <code>max-age</code> (expiration)",
+    "La <b>validation</b> par <code>ETag</code>/<code>Last-Modified</code> : si rien n'a changé, le serveur répond <code>304 Not Modified</code> (sans corps), via <code>$response->isNotModified($request)</code>",
+    "Un <code>Cache-Control: no-cache</code> qui supprime tout trafic",
+    "Le cache applicatif PSR-6 côté navigateur"
+  ],
+  correct:1,
+  exp:`Deux modèles : <b>expiration</b> (<code>max-age</code>/<code>Expires</code>, pas de revalidation tant que frais) et <b>validation</b> (<code>ETag</code>/<code>Last-Modified</code>). En validation, le client renvoie <code>If-None-Match</code>/<code>If-Modified-Since</code> ; si inchangé ⇒ <b>304</b> sans corps. En Symfony : <code>Response::isNotModified()</code>.`,
+  ref:["symfony.com — HTTP cache validation","https://symfony.com/doc/current/http_cache/validation.html"]
+},
+{
+  theme:"Perf web · HTTP cache",
+  q:`Vous voulez qu'un reverse proxy (Varnish / Symfony HttpCache) garde une page 60 s, mais que le <b>navigateur</b> ne la garde pas. Quel en-tête ?`,
+  options:[
+    "<code>Cache-Control: max-age=60</code>",
+    "<code>Cache-Control: public, s-maxage=60, max-age=0</code> : <code>s-maxage</code> cible les caches <b>partagés</b> et y prime sur <code>max-age</code> ; <code>max-age=0</code> évite la mise en cache navigateur",
+    "<code>Cache-Control: private, max-age=60</code>",
+    "<code>Expires: 60</code>"
+  ],
+  correct:1,
+  exp:`<code>s-maxage</code> ne s'applique qu'aux caches <b>partagés</b> (reverse proxy/CDN) et y prime sur <code>max-age</code>. Combiné à <code>max-age=0</code>, le proxy sert sa version cachée 60 s tandis que le navigateur revalide à chaque fois. La réponse doit être <code>public</code>.`,
+  ref:["symfony.com — HTTP expiration","https://symfony.com/doc/current/http_cache/expiration.html"]
+},
+{
+  theme:"Perf web · Cache applicatif",
+  q:`Vous cachez un calcul lourd côté appli (PSR-6). Comment invalider d'un coup toutes les entrées liées à un produit modifié ?`,
+  options:[
+    "Itérer et supprimer chaque clé connue à la main",
+    "Utiliser un pool <b>taggable</b> (<code>TagAwareCacheInterface</code>) : taguer les items (<code>product_42</code>) puis <code>invalidateTags(['product_42'])</code>",
+    "Vider tout le cache applicatif (<code>cache:pool:clear</code>)",
+    "Réduire le TTL à 1 seconde"
+  ],
+  correct:1,
+  exp:`Le <b>cache par tags</b> (<code>TagAwareAdapter</code> / <code>TagAwareCacheInterface</code>) associe des étiquettes aux items ; <code>invalidateTags(['product_42'])</code> purge en une fois toutes les entrées liées, sans connaître les clés. Plus chirurgical que tout vider, plus robuste que lister les clés.`,
+  ref:["symfony.com — Cache invalidation by tags","https://symfony.com/doc/current/cache.html#using-cache-tags"]
+}
+];
+
+/* ============================================================================ */
+const $ = s => document.querySelector(s);
+const KEYS = ["1","2","3","4"];
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+let idx = 0, score = 0, answered = false;
+const results = []; // {theme, correct:bool, q}
+
+function startPills(){
+  const themes = [...new Set(QUESTIONS.map(q=>q.theme.split(" · ")[0]))];
+  $("#startPills").innerHTML = themes.map(t=>`<span class="chip">${t}</span>`).join("")
+    + `<span class="chip">${QUESTIONS.length} questions</span>`;
+}
+function show(id){ ["start","quiz","end"].forEach(s=>$("#"+s).classList.toggle("hide", s!==id)); }
+
+function render(){
+  answered = false;
+  const item = QUESTIONS[idx];
+  $("#theme").textContent = item.theme;
+  $("#counter").textContent = `${idx+1} / ${QUESTIONS.length}`;
+  $("#prog").style.width = `${(idx)/QUESTIONS.length*100}%`;
+  $("#question").innerHTML = item.q;
+  $("#exp").className = "exp"; $("#exp").innerHTML = "";
+  $("#hint").textContent = "Choisis une réponse…";
+  $("#nextBtn").disabled = true;
+  $("#nextBtn").textContent = (idx === QUESTIONS.length-1) ? "Voir le résultat →" : "Suivant →";
+  const opts = $("#opts"); opts.innerHTML = "";
+  const order = shuffle([...item.options.keys()]); // ordre d'affichage aléatoire → pas de biais de position
+  order.forEach((orig,pos)=>{
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.dataset.orig = orig;
+    b.innerHTML = `<span class="key">${KEYS[pos]}</span><span>${item.options[orig]}</span>`;
+    b.onclick = ()=>choose(orig);
+    opts.appendChild(b);
+  });
+}
+
+function choose(i){
+  if(answered) return;
+  answered = true;
+  const item = QUESTIONS[idx];
+  const nodes = [...document.querySelectorAll(".opt")];
+  nodes.forEach(n=>{
+    const orig = +n.dataset.orig;
+    n.classList.add("locked");
+    if(orig===item.correct) n.classList.add("correct");
+    else if(orig===i) n.classList.add("wrong");
+    else n.classList.add("dim");
+  });
+  const good = i===item.correct;
+  if(good) score++;
+  results.push({theme:item.theme, correct:good, q:item.q});
+  const exp = $("#exp");
+  exp.className = "exp show";
+  exp.innerHTML =
+    `<div class="verdict ${good?'good':'bad'}">${good?'✓ Bonne réponse':'✗ Mauvaise réponse'}</div>`+
+    `<div>${item.exp}</div>`+
+    `<div class="ref">📖 ${item.ref[0]} — <a href="${item.ref[1]}" target="_blank" rel="noopener">doc</a></div>`;
+  $("#hint").textContent = `Score : ${score} / ${results.length}`;
+  $("#nextBtn").disabled = false;
+  $("#prog").style.width = `${(idx+1)/QUESTIONS.length*100}%`;
+}
+
+function next(){
+  if(!answered) return;
+  if(idx < QUESTIONS.length-1){ idx++; render(); }
+  else end();
+}
+
+function end(){
+  show("end");
+  $("#finalScore").textContent = `${score} / ${QUESTIONS.length}`;
+  const pct = Math.round(score/QUESTIONS.length*100);
+  let msg;
+  if(pct>=85) msg = "Excellent — les fondamentaux du Jour 2 sont solides. 🎯";
+  else if(pct>=65) msg = "Bon niveau global. Quelques points à revoir ci-dessous.";
+  else if(pct>=45) msg = "Base présente mais fragile : reprendre les notions manquées.";
+  else msg = "À consolider : reprendre le support du Jour 2 sur les thèmes ratés.";
+  $("#finalMsg").textContent = `${pct}% de bonnes réponses. ${msg}`;
+
+  // par thème
+  const groups = {};
+  results.forEach(r=>{
+    const t = r.theme.split(" · ")[0];
+    groups[t] = groups[t] || {ok:0,total:0};
+    groups[t].total++; if(r.correct) groups[t].ok++;
+  });
+  $("#byTheme").innerHTML = Object.entries(groups).map(([t,g])=>
+    `<div class="row"><span>${t}</span><span>${g.ok} / ${g.total}</span></div>`).join("");
+
+  // questions ratées
+  const missed = results.filter(r=>!r.correct);
+  $("#reviewWrap").innerHTML = missed.length
+    ? `<h3>À revoir (${missed.length})</h3>` + missed.map(r=>`<div class="item"><b>${r.theme}</b><br>${r.q}</div>`).join("")
+    : `<h3>Sans faute 🏆</h3><div class="item">Toutes les questions sont correctes.</div>`;
+}
+
+function restart(){ idx=0; score=0; results.length=0; render(); show("quiz"); }
+
+document.addEventListener("keydown", e=>{
+  if($("#quiz").classList.contains("hide")) return;
+  if(KEYS.includes(e.key)){ const pos=+e.key-1; const btn=document.querySelectorAll(".opt")[pos]; if(btn && !answered) choose(+btn.dataset.orig); }
+  if(e.key==="Enter" && answered) next();
+});
+$("#startBtn").onclick = ()=>{ render(); show("quiz"); };
+$("#nextBtn").onclick = next;
+$("#restartBtn").onclick = restart;
+startPills();
+</script>
+</body>
+</html>
