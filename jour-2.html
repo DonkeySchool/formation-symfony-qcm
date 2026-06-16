@@ -237,6 +237,19 @@ const QUESTIONS = [
   exp:`Un service <b>lazy</b> est injecté sous forme de <b>proxy</b> ; l'instanciation réelle est différée au premier accès. Idéal pour une dépendance lourde et peu sollicitée, sans casser l'injection par constructeur. <code>$container->get()</code> serait du <i>service location</i> (anti-pattern).`,
   ref:["symfony.com — Lazy services","https://symfony.com/doc/current/service_container/lazy_services.html"]
 },
+{
+  theme:"Injection · Required",
+  q:`Une classe de base <b>abstraite</b> a besoin d'un <code>LoggerInterface</code>, mais vous ne voulez pas forcer chaque sous-classe à redéfinir le constructeur et appeler <code>parent::__construct()</code>. Approche idiomatique Symfony ?`,
+  options:[
+    "Injecter dans le constructeur de la classe de base et appeler <code>parent::__construct()</code> dans chaque enfant",
+    "Une méthode <code>#[Required] public function setLogger(LoggerInterface $logger)</code> : le conteneur l'appelle automatiquement après instanciation (injection par <b>méthode/setter</b>)",
+    "Rendre le logger <code>static</code> et l'assigner globalement au boot",
+    "Récupérer le logger via <code>$container->get(LoggerInterface::class)</code> dans la classe de base"
+  ],
+  correct:1,
+  exp:`<code>#[Required]</code> sur une méthode (souvent un setter) déclenche son <b>appel automatique</b> par le conteneur après instanciation : c'est l'<b>injection par méthode</b>. Cas canonique : une classe de base abstraite qui a besoin d'une dépendance sans imposer aux sous-classes de redéfinir le constructeur. C'est le mécanisme derrière <code>AbstractController::setContainer()</code>. <code>$container->get()</code> serait du <i>service location</i>.`,
+  ref:["symfony.com — Method/setter injection (#[Required])","https://symfony.com/doc/current/service_container/calls.html"]
+},
 /* ---------------------------------------------------------------- Architecture */
 {
   theme:"Architecture · Responsabilités",
@@ -395,6 +408,19 @@ const QUESTIONS = [
   correct:1,
   exp:`Le piège n°1 : l'<b>Active Record</b> Propel (<code>$obj->save()</code>) n'existe pas en Doctrine. On <b>persiste</b>/<b>supprime</b> via l'<code>EntityManager</code> et un <b>flush()</b> unique en fin d'unité de travail (transaction). Penser « unit of work », pas « objet auto-sauvegardé ».`,
   ref:["doctrine — Working with objects","https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/working-with-objects.html"]
+},
+{
+  theme:"Propel · Requêtes",
+  q:`En Propel, vous bouclez sur des <code>Book</code> et lisez <code>$book->getAuthor()->getName()</code> ⇒ N+1. Quelle méthode du <code>BookQuery</code> (ModelCriteria) charge l'auteur en <b>une seule requête</b> (équivalent du fetch join Doctrine) ?`,
+  options:[
+    "<code>->join('Book.Author')</code> seul",
+    "<code>->joinWith('Book.Author')</code> : il joint <b>et hydrate</b> l'objet <code>Author</code> lié dans la même requête (évite le N+1)",
+    "<code>->with('Author')</code> sans aucune jointure préalable",
+    "<code>->setFormatter(ModelCriteria::FORMAT_ARRAY)</code>"
+  ],
+  correct:1,
+  exp:`<code>joinWith('Book.Author')</code> ajoute la jointure <b>et hydrate</b> l'objet <code>Author</code> lié dans la même requête — l'équivalent Propel du fetch join Doctrine. Un simple <code>->join()</code> joint pour filtrer mais <b>n'hydrate pas</b> la relation : accéder à <code>getAuthor()</code> relancerait une requête (N+1). Pour une colonne calculée, on utilise <code>->withColumn('COUNT(Review.Id)', 'NbReviews')</code> puis <code>getVirtualColumn('NbReviews')</code>.`,
+  ref:["propelorm.org — Relationships (joinWith)","https://propelorm.org/documentation/03-basic-crud.html#joins"]
 },
 /* ---------------------------------------------------------------- Optimisation SQL */
 {
