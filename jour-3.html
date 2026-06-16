@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM Symfony — Jour 3 · Helfrich × DonkeyCode</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --card2:#1f232c; --line:#2a2f3a;
+    --txt:#e7e9ee; --muted:#9aa3b2; --accent:#6aa6ff; --accent2:#8b5cf6;
+    --ok:#22c55e; --okbg:#0e2a18; --ko:#ef4444; --kobg:#2a1212;
+    --chip:#232838;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #1a1f2b 0%, var(--bg) 60%);
+    color:var(--txt); font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:32px 16px 80px;
+  }
+  .app{width:100%; max-width:860px}
+  header.top{display:flex; align-items:center; gap:12px; margin-bottom:22px}
+  .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b0d12}
+  header.top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+  header.top .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 28px 24px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35)}
+
+  /* progress */
+  .bar{height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin:0 0 18px}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:13px;color:var(--muted)}
+  .chip{display:inline-block;background:var(--chip);color:#c9d4ea;border:1px solid var(--line);
+    padding:4px 11px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.2px}
+
+  .q{font-size:20px;font-weight:650;margin:6px 0 18px;line-height:1.4}
+  .q code, .opt code, .exp code{background:#0c0e13;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.9em;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;color:#a8c7ff}
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;cursor:pointer;
+    background:var(--card2);border:1.5px solid var(--line);border-radius:12px;padding:13px 15px;color:var(--txt);
+    font-size:15px;transition:border-color .15s,background .15s,transform .05s}
+  .opt:hover:not(.locked){border-color:#3a4356;background:#222735}
+  .opt:active:not(.locked){transform:translateY(1px)}
+  .opt .key{flex:0 0 26px;height:26px;border-radius:7px;background:#0c0e13;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--muted)}
+  .opt.correct{border-color:var(--ok);background:var(--okbg)}
+  .opt.correct .key{background:var(--ok);color:#06210f;border-color:var(--ok)}
+  .opt.wrong{border-color:var(--ko);background:var(--kobg)}
+  .opt.wrong .key{background:var(--ko);color:#2a0a0a;border-color:var(--ko)}
+  .opt.locked{cursor:default}
+  .opt.dim{opacity:.55}
+
+  .exp{margin-top:18px;border-left:3px solid var(--accent);background:#11151d;border-radius:0 12px 12px 0;
+    padding:14px 16px;font-size:14.5px;color:#d4dae6;display:none}
+  .exp.show{display:block;animation:fade .25s ease}
+  .exp .verdict{font-weight:700;margin-bottom:6px}
+  .exp .verdict.good{color:var(--ok)} .exp .verdict.bad{color:var(--ko)}
+  .exp .ref{margin-top:8px;font-size:12.5px;color:var(--muted)}
+  .exp .ref a{color:var(--accent)}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+  .hint{font-size:12.5px;color:var(--muted)}
+  button.btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0d12;border:0;border-radius:11px;
+    padding:11px 20px;font-weight:700;font-size:14.5px;cursor:pointer;transition:opacity .15s,transform .05s}
+  button.btn:hover{opacity:.92} button.btn:active{transform:translateY(1px)}
+  button.btn[disabled]{opacity:.35;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+
+  /* start / end */
+  .center{text-align:center}
+  .big{font-size:30px;font-weight:800;margin:6px 0 4px}
+  .lead{color:var(--muted);font-size:15px;max-width:620px;margin:0 auto 22px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0 26px}
+  .score{font-size:54px;font-weight:850;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;margin:8px 0}
+  .bytheme{text-align:left;margin:20px auto;max-width:560px}
+  .bytheme .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+  .bytheme .row span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
+  .review{text-align:left;margin:22px auto 0;max-width:640px}
+  .review h3{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:0 0 10px}
+  .review .item{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:9px;font-size:14px}
+  .review .item b{color:#ffd9d9;font-weight:600}
+  footer{margin-top:26px;text-align:center;color:var(--muted);font-size:12px}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="logo">DC</div>
+    <div>
+      <h1>QCM Symfony — Jour 3</h1>
+      <div class="sub">Formation PHP / Symfony avancé · Helfrich × DonkeyCode · Vérification des acquis</div>
+    </div>
+    <nav style="margin-left:auto;display:flex;gap:6px;font-size:13px;align-items:center;flex-wrap:wrap"><a href="index.html" style="text-decoration:none;padding:5px 11px;border-radius:99px;border:1px solid #2a2f3a;color:#c9d4ea">Menu</a><a href="jour-1.html" style="text-decoration:none;padding:5px 11px;border-radius:99px;border:1px solid #2a2f3a;color:#c9d4ea">Jour 1</a><a href="jour-2.html" style="text-decoration:none;padding:5px 11px;border-radius:99px;border:1px solid #2a2f3a;color:#c9d4ea">Jour 2</a><a href="jour-3.html" style="text-decoration:none;padding:5px 11px;border-radius:99px;border:1px solid #2a2f3a;background:linear-gradient(135deg,#6aa6ff,#8b5cf6);color:#0b0d12;font-weight:700">Jour 3</a></nav>
+  </header>
+
+  <!-- START -->
+  <section id="start" class="card center">
+    <div class="big">Prêt à valider le Jour 3 ?</div>
+    <p class="lead">QCM de niveau <b>avancé</b>, façon préparation à une certification PHP/Symfony :
+       questions de jugement, distracteurs subtils, une seule bonne réponse, correction immédiate et sourcée.
+       Couvre la <b>sérialisation</b>, la <b>validation</b> &amp; les formulaires, les <b>tests PHPUnit</b>,
+       le composant <b>Clock / DatePoint</b>, les <b>contrôleurs &amp; attributs</b> et <b>Messenger</b> (workers, RabbitMQ).</p>
+    <div class="pills" id="startPills"></div>
+    <button class="btn" id="startBtn">Commencer le QCM →</button>
+    <footer>Navigation clavier : touches <b>1–4</b> pour répondre · <b>Entrée</b> pour continuer</footer>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="card hide">
+    <div class="bar"><i id="prog"></i></div>
+    <div class="meta">
+      <span class="chip" id="theme">—</span>
+      <span id="counter">1 / 1</span>
+    </div>
+    <div class="q" id="question"></div>
+    <div class="opts" id="opts"></div>
+    <div class="exp" id="exp"></div>
+    <div class="actions">
+      <span class="hint" id="hint">Choisis une réponse…</span>
+      <button class="btn" id="nextBtn" disabled>Suivant →</button>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="card center hide">
+    <div class="big">Résultat</div>
+    <div class="score" id="finalScore">0 / 0</div>
+    <p class="lead" id="finalMsg"></p>
+    <div class="bytheme" id="byTheme"></div>
+    <div class="review" id="reviewWrap"></div>
+    <div style="margin-top:26px">
+      <button class="btn ghost" id="restartBtn">↺ Recommencer</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ============================================================================
+   QCM Symfony — Jour 3 (slides 191–240)
+   Sources de vérité : php.net (migrations) + symfony.com (doc officielle)
+   Chaque question est opérationnelle : pas de théorie gratuite.
+   ========================================================================== */
+const QUESTIONS = [
+/* ---------------------------------------------------------------- Sérialisation */
+{
+  theme:"Sérialisation · Groupes",
+  q:`La même entité <code>User</code> doit exposer <code>id, name</code> dans une liste, mais <code>id, name, email, address</code> en détail. Mécanisme adapté ?`,
+  options:[
+    "Créer deux entités séparées",
+    "Des <b>groupes de sérialisation</b> (<code>#[Groups(['user:list'])]</code> / JMS <code>@Groups</code>) : on annote les champs et on sérialise avec le contexte voulu",
+    "Sérialiser tout puis filtrer le JSON à la main",
+    "Un <code>#[Ignore]</code> global sur l'entité"
+  ],
+  correct:1,
+  exp:`Les <b>groupes</b> (Symfony <code>#[Groups(['user:list'])]</code>, JMS <code>@Groups</code>) rattachent chaque champ à un ou plusieurs contextes ; on sérialise en passant les groupes voulus (<code>['groups' => 'user:list']</code>). Pour des contrats très divergents ou versionnés, un DTO reste préférable (cf. Jour 3).`,
+  ref:["symfony.com — Serializer groups","https://symfony.com/doc/current/serializer.html#using-serialization-groups-attributes"]
+},
+{
+  theme:"Sérialisation · Références circulaires",
+  q:`<code>Author</code> a une collection de <code>Book</code>, et chaque <code>Book</code> référence son <code>Author</code>. À la sérialisation → boucle infinie. Solution propre ?`,
+  options:[
+    "Retirer la relation bidirectionnelle du modèle",
+    "Limiter la profondeur (<code>#[MaxDepth]</code> + <code>enable_max_depth</code>, ou JMS <code>@MaxDepth</code>) ou un <b>circular reference handler</b> qui renvoie un identifiant au lieu de re-sérialiser l'objet",
+    "Passer les propriétés en <code>private</code>",
+    "Augmenter la mémoire PHP"
+  ],
+  correct:1,
+  exp:`Par défaut le sérialiseur détecte la référence circulaire et <b>lève une exception</b>. On la gère par une <b>limite de profondeur</b> (Symfony <code>#[MaxDepth]</code> avec <code>enable_max_depth</code> ; JMS <code>@MaxDepth</code> + <code>enableMaxDepthChecks()</code>) ou un <b>circular reference handler</b> qui retourne un identifiant (ex. l'id) pour rompre la boucle.`,
+  ref:["symfony.com — Handling circular references","https://symfony.com/doc/current/serializer.html#handling-circular-references"]
+},
+{
+  theme:"Sérialisation · Virtual property",
+  q:`Vous voulez exposer <code>fullName</code> (valeur calculée) dans la sortie JSON, sans ajouter de propriété stockée. Comment ?`,
+  options:[
+    "Ajouter une colonne <code>full_name</code> en base",
+    "Exposer un <b>accesseur</b> comme champ virtuel : un getter (sérialisé tel quel par Symfony) ou JMS <code>@VirtualProperty</code> sur la méthode",
+    "Concaténer côté front uniquement",
+    "Le sérialiseur ne peut exposer que des propriétés réelles"
+  ],
+  correct:1,
+  exp:`Un <b>champ virtuel</b> expose une valeur calculée via une méthode : le Serializer Symfony sérialise les <b>getters</b> publics (<code>getFullName()</code> → <code>fullName</code>), et JMS fournit <code>@VirtualProperty</code> pour exposer le retour d'une méthode. Aucune colonne ni propriété stockée.`,
+  ref:["jmsyst.com — VirtualProperty","https://jmsyst.com/libs/serializer/master/reference/annotations#virtualproperty"]
+},
+{
+  theme:"Sérialisation · Exclusion",
+  q:`Une entité <code>User</code> a un <code>password</code> hashé. Pour qu'il ne fuie <b>jamais</b> dans une réponse API, l'approche la plus sûre ?`,
+  options:[
+    "Compter sur le fait de penser à ne pas l'inclure",
+    "L'exclure explicitement (<code>#[Ignore]</code> / JMS <code>@Exclude</code>), et idéalement exposer un <b>DTO</b> en liste blanche qui ne contient que les champs voulus (aucune fuite par défaut)",
+    "Le chiffrer une seconde fois avant sérialisation",
+    "Le renommer <code>pwd</code> pour le masquer"
+  ],
+  correct:1,
+  exp:`On exclut le champ sensible (<code>#[Ignore]</code>, JMS <code>@Exclude</code>/<code>ExclusionPolicy</code>), mais la stratégie la plus robuste reste un <b>DTO de sortie</b> en liste blanche : aucun champ non prévu ne peut fuir, même après un refactor d'entité (cf. Jour 3, DTO vs groupes).`,
+  ref:["symfony.com — Ignoring attributes","https://symfony.com/doc/current/serializer.html#ignoring-attributes"]
+},
+{
+  theme:"Sérialisation · Handler custom",
+  q:`Un value object <code>Money</code> (montant + devise) doit se sérialiser en <code>"12.50 EUR"</code>, sans polluer l'entité. Comment ?`,
+  options:[
+    "Ajouter une méthode <code>__toString</code> et espérer",
+    "Écrire un <b>normalizer custom</b> (Symfony <code>NormalizerInterface</code>) ou un <b>handler</b> JMS (<code>SubscribingHandlerInterface</code>) dédié au type <code>Money</code>",
+    "Stocker la chaîne déjà formatée en base",
+    "Le sérialiseur gère nativement tous les value objects"
+  ],
+  correct:1,
+  exp:`Pour un type spécifique (Money, une date à format custom…), on enregistre un <b>normalizer</b> (Symfony <code>NormalizerInterface</code>/<code>DenormalizerInterface</code>) ou un <b>handler</b> JMS (<code>SubscribingHandlerInterface</code>) qui décrit la (dé)sérialisation du type. La logique reste hors de l'entité et réutilisable partout.`,
+  ref:["symfony.com — Custom normalizers","https://symfony.com/doc/current/serializer/custom_normalizer.html"]
+},
+/* ---------------------------------------------------------------- Validation */
+{
+  theme:"Validation · Placement",
+  q:`Où placer « l'email est obligatoire et bien formé » et « le code promo doit exister et être actif » ?`,
+  options:[
+    "Tout sur l'entité, systématiquement",
+    "Les invariants simples (NotBlank, Email) sur l'<b>entité/DTO</b> via contraintes ; la règle métier qui nécessite un accès (le promo existe en base) dans une <b>contrainte custom / un service</b> de validation",
+    "Tout dans le contrôleur avec des <code>if</code>",
+    "Tout côté JavaScript"
+  ],
+  correct:1,
+  exp:`Les <b>invariants</b> structurels (NotBlank, Email, Length) vivent près de la donnée (entité/DTO, contraintes déclaratives). Une règle qui dépend d'un <b>état externe</b> (le code promo existe et est actif) relève d'une <b>contrainte custom</b> (dont le validator injecte le repository) ou d'un service métier. Tout mettre dans le contrôleur disperse les règles.`,
+  ref:["symfony.com — Validation","https://symfony.com/doc/current/validation.html"]
+},
+{
+  theme:"Validation · Groupes",
+  q:`À l'inscription on exige le mot de passe ; à la mise à jour du profil, non. Même classe. Comment ?`,
+  options:[
+    "Créer deux classes distinctes",
+    "Des <b>groupes de validation</b> : on assigne les contraintes à des groupes (<code>registration</code>, <code>profile</code>) et on valide avec le groupe du contexte",
+    "Des <code>if</code> dans le setter",
+    "Désactiver la validation lors de la mise à jour"
+  ],
+  correct:1,
+  exp:`Les <b>groupes de validation</b> appliquent des sous-ensembles de contraintes selon le contexte : <code>#[Assert\\NotBlank(groups: ['registration'])]</code>, puis <code>validate($u, null, ['registration'])</code>. Un <code>GroupSequence</code> permet en plus d'ordonner et de court-circuiter les groupes.`,
+  ref:["symfony.com — Validation groups","https://symfony.com/doc/current/validation/groups.html"]
+},
+{
+  theme:"Validation · Cascade",
+  q:`Un <code>Order</code> contient une collection d'<code>OrderLine</code> annotées de contraintes. À la validation de l'<code>Order</code>, les lignes ne sont pas vérifiées. Pourquoi ?`,
+  options:[
+    "Le validateur ne <b>cascade pas</b> par défaut : il faut <code>#[Assert\\Valid]</code> sur la propriété pour propager la validation aux objets/collections imbriqués",
+    "Il faut valider chaque ligne dans un autre contrôleur",
+    "Les collections ne sont jamais validables",
+    "C'est un bug de Symfony"
+  ],
+  correct:0,
+  exp:`Le validateur ne <b>cascade pas</b> automatiquement vers les objets/collections imbriqués : sans <code>#[Assert\\Valid]</code> sur la propriété, les contraintes des <code>OrderLine</code> ne sont pas évaluées. C'est le piège classique (« Attention <code>Assert\\Valid</code> ») — à ne pas confondre avec une contrainte de valeur.`,
+  ref:["symfony.com — Valid (cascade)","https://symfony.com/doc/current/reference/constraints/Valid.html"]
+},
+{
+  theme:"Validation · Unicité",
+  q:`Garantir l'unicité d'un email utilisateur. Approche correcte ET sûre face aux accès concurrents ?`,
+  options:[
+    "Uniquement <code>#[UniqueEntity('email')]</code> (contrainte applicative)",
+    "<code>#[UniqueEntity('email')]</code> (contrainte de <b>classe</b>, qui interroge le repository) <b>+</b> un index unique en base : l'applicatif renvoie un message propre, l'index protège des <i>race conditions</i>",
+    "Un <code>#[Assert\\Unique]</code> posé sur la propriété",
+    "Vérifier à la main dans le contrôleur"
+  ],
+  correct:1,
+  exp:`<code>#[UniqueEntity]</code> est une contrainte de <b>classe</b> (pas de propriété) qui fait une requête : entre le check et l'INSERT, deux requêtes concurrentes peuvent toutes deux passer. L'<b>index unique en base</b> est la garantie réelle (atomique) ; l'applicatif sert surtout à renvoyer un message d'erreur lisible. Les deux sont complémentaires.`,
+  ref:["symfony.com — UniqueEntity","https://symfony.com/doc/current/reference/constraints/UniqueEntity.html"]
+},
+{
+  theme:"Validation · Contrainte custom",
+  q:`Vous créez une contrainte <code>#[ContainsNoProfanity]</code>. Structure correcte ?`,
+  options:[
+    "Une seule classe qui étend <code>Assert\\Callback</code>",
+    "Deux classes : la <b>Constraint</b> (porte le message/les options) et son <b>ConstraintValidator</b> (<code>validate()</code> qui appelle <code>$this->context->buildViolation()->addViolation()</code>)",
+    "Une fonction anonyme passée au validateur",
+    "Une annotation suffit, sans aucun code"
+  ],
+  correct:1,
+  exp:`Une contrainte custom = une classe <b>Constraint</b> (déclare message/options/cibles) + une classe <b>Validator</b> (<code>extends ConstraintValidator</code>, méthode <code>validate($value, $constraint)</code> qui ajoute la violation via le <code>ExecutionContext</code>). Le lien se fait par convention (<code>Constraint</code> → <code>...Validator</code>) ou <code>validatedBy()</code>. Le validator est un <b>service</b> ⇒ on y injecte des dépendances.`,
+  ref:["symfony.com — Custom constraint","https://symfony.com/doc/current/validation/custom_constraint.html"]
+},
+/* ---------------------------------------------------------------- Tests PHPUnit */
+{
+  theme:"Tests · Quoi mocker",
+  q:`Vous testez <code>PriceCalculator</code> qui appelle un <code>CurrencyApiInterface</code> (HTTP externe). Que mocker ?`,
+  options:[
+    "Mocker <code>PriceCalculator</code> lui-même",
+    "Mocker la <b>dépendance</b> <code>CurrencyApiInterface</code> (collaborateur externe non déterministe) ; on teste le vrai <code>PriceCalculator</code>",
+    "Ne rien mocker et appeler la vraie API",
+    "Mocker uniquement la base de données"
+  ],
+  correct:1,
+  exp:`On ne mocke jamais le <b>système sous test</b> (SUT) : on mocke ses <b>collaborateurs</b>, surtout les I/O non déterministes (API externe). On injecte un double de <code>CurrencyApiInterface</code> renvoyant des valeurs contrôlées, et on vérifie le comportement réel du <code>PriceCalculator</code>.`,
+  ref:["phpunit.de — Test doubles","https://docs.phpunit.de/en/current/test-doubles.html"]
+},
+{
+  theme:"Tests · Stub vs Mock",
+  q:`Différence entre <code>createStub()</code> et un mock avec <code>expects($this->once())->method(...)</code> ?`,
+  options:[
+    "Aucune, ce sont des synonymes",
+    "Le <b>stub</b> fournit des valeurs de retour (vérification d'<b>état</b>) ; le <b>mock</b> vérifie en plus les <b>interactions</b> (méthode appelée, n fois, avec tels arguments)",
+    "Le stub est plus lent à l'exécution",
+    "Le mock ne peut pas retourner de valeur"
+  ],
+  correct:1,
+  exp:`Un <b>stub</b> remplace une dépendance et renvoie des valeurs prédéfinies (vérification d'<b>état</b>). Un <b>mock</b> ajoute des <b>attentes</b> sur les appels (<code>expects()->method()->with()->willReturn()</code>) : vérification de <b>comportement</b>. Sur-spécifier les interactions rend les tests fragiles — à réserver quand l'interaction EST le contrat.`,
+  ref:["phpunit.de — Test doubles","https://docs.phpunit.de/en/current/test-doubles.html"]
+},
+{
+  theme:"Tests · Méthodes privées",
+  q:`Comment tester une méthode <code>private</code> complexe ?`,
+  options:[
+    "Utiliser la Réflexion pour forcer son accès",
+    "On ne la teste pas directement : on la couvre via l'<b>API publique</b> qui l'utilise ; si elle mérite ses propres tests, c'est souvent le signe qu'elle doit être <b>extraite</b> dans une classe dédiée",
+    "La passer en <code>public</code> le temps du test",
+    "Les méthodes privées ne sont pas testables, on les supprime"
+  ],
+  correct:1,
+  exp:`On teste le <b>comportement observable</b> via l'API publique : la logique privée est couverte indirectement. Le besoin récurrent de tester un privé en direct signale une <b>responsabilité cachée</b> à extraire dans un collaborateur (testable proprement). La Réflexion ou le <code>public</code> de complaisance couplent le test à l'implémentation.`,
+  ref:["phpunit.de — Writing tests","https://docs.phpunit.de/en/current/writing-tests-for-phpunit.html"]
+},
+{
+  theme:"Tests · DataProvider",
+  q:`Vous voulez exécuter le même test sur 12 jeux d'entrées/sorties. Outil PHPUnit ?`,
+  options:[
+    "Une boucle <code>foreach</code> dans un seul test",
+    "Un <b>DataProvider</b> (<code>#[DataProvider]</code> / <code>@dataProvider</code>) : une méthode fournit les cas, PHPUnit exécute le test une fois par cas et isole chaque échec",
+    "Douze méthodes de test copiées-collées",
+    "Un <code>setUp()</code> qui boucle"
+  ],
+  correct:1,
+  exp:`Le <b>DataProvider</b> alimente un test avec N jeux de données : PHPUnit l'<b>exécute une fois par cas</b>, isolant les échecs (on voit lequel casse). Une boucle interne s'arrête au premier échec et masque les autres ; copier-coller 12 tests est ingérable.`,
+  ref:["phpunit.de — Data providers","https://docs.phpunit.de/en/current/writing-tests-for-phpunit.html#data-providers"]
+},
+{
+  theme:"Tests · Temps",
+  q:`Une logique « le lien expire 24 h après création » est difficile à tester avec <code>new \\DateTimeImmutable()</code>. Bonne pratique ?`,
+  options:[
+    "Mettre des <code>sleep()</code> réels dans le test",
+    "Dépendre de <code>ClockInterface</code> et injecter une <b>MockClock</b> dans le test pour <b>figer / avancer</b> le temps de façon déterministe",
+    "Mocker la fonction globale <code>time()</code>",
+    "Tester directement en production"
+  ],
+  correct:1,
+  exp:`On rend le temps <b>injectable</b> via <code>ClockInterface</code> (au lieu de <code>new \\DateTimeImmutable()</code> en dur). En test, une <b>MockClock</b> fige l'instant et permet de l'<b>avancer</b> (<code>sleep()</code>/<code>modify()</code>) pour rejouer l'expiration sans attendre. Déterministe et instantané.`,
+  ref:["symfony.com — Clock testing","https://symfony.com/doc/current/components/clock.html#mocking-a-clock-in-tests"]
+},
+/* ---------------------------------------------------------------- Clock / Dates */
+{
+  theme:"Clock · Testabilité",
+  q:`Pourquoi injecter <code>ClockInterface</code> plutôt que d'appeler <code>new \\DateTimeImmutable()</code> directement dans un service ?`,
+  options:[
+    "Pour gagner en performance",
+    "Pour la <b>testabilité</b> et la reproductibilité : le temps devient une dépendance qu'on peut figer/contrôler (NativeClock en prod, MockClock en test)",
+    "Parce que <code>new \\DateTimeImmutable()</code> est déprécié",
+    "Pour éviter d'avoir à gérer les fuseaux horaires"
+  ],
+  correct:1,
+  exp:`Appeler <code>new \\DateTimeImmutable()</code> en dur rend la logique temporelle <b>non testable</b> (impossible de figer « maintenant »). <code>ClockInterface</code> fait du temps une <b>dépendance injectée</b> : <code>NativeClock</code> en prod, <code>MockClock</code> en test (gel/avance), <code>MonotonicClock</code> pour mesurer des durées. PSR-20.`,
+  ref:["symfony.com — Clock component","https://symfony.com/doc/current/components/clock.html"]
+},
+{
+  theme:"Clock · MockClock",
+  q:`En test, comment vérifier qu'un traitement programmé « dans 30 minutes » se déclenche, sans attendre ?`,
+  options:[
+    "Un vrai <code>sleep(1800)</code>",
+    "Une <b>MockClock</b> figée que l'on fait <b>avancer</b> de 30 min (<code>$clock->sleep(1800)</code> / <code>modify()</code>) avant d'asserter",
+    "Réduire le délai à 1 seconde dans le code de prod",
+    "Désactiver l'assertion temporelle"
+  ],
+  correct:1,
+  exp:`La <code>MockClock</code> part d'un instant figé et expose <code>sleep()</code>/<code>modify()</code> pour <b>déplacer</b> le temps perçu par le code testé. On avance de 1800 s puis on vérifie le déclenchement — instantané et déterministe, sans toucher au code de prod.`,
+  ref:["symfony.com — MockClock","https://symfony.com/doc/current/components/clock.html#mocking-a-clock-in-tests"]
+},
+{
+  theme:"Clock · DatePoint",
+  q:`Symfony recommande, plutôt que <code>new \\DateTimeImmutable()</code>, d'utiliser…`,
+  options:[
+    "<code>new \\DateTime()</code> (mutable)",
+    "<code>DatePoint</code> : une extension immuable de <code>\\DateTimeImmutable</code> intégrée au composant Clock (sa notion de « maintenant » suit l'horloge)",
+    "<code>time()</code> + <code>date()</code>",
+    "<code>Carbon</code> obligatoirement"
+  ],
+  correct:1,
+  exp:`<code>DatePoint</code> (Symfony 6.4+) étend <code>\\DateTimeImmutable</code> : même API, immuable par nature et <b>intégré au Clock</b> (son « maintenant » suit l'horloge, donc testable via MockClock). On remplace avantageusement <code>new \\DateTimeImmutable()</code> par <code>new DatePoint()</code>.`,
+  ref:["symfony.com — DatePoint","https://symfony.com/doc/current/components/clock.html#datepoint"]
+},
+/* ---------------------------------------------------------------- Contrôleurs & attributs */
+{
+  theme:"Contrôleurs · Map*",
+  q:`Quel attribut pour : (a) un DTO depuis le corps JSON, (b) un DTO depuis toute la query string, (c) un seul paramètre <code>?page=2</code> typé ?`,
+  options:[
+    "(a) <code>#[MapQueryString]</code> (b) <code>#[MapRequestPayload]</code> (c) <code>#[MapEntity]</code>",
+    "(a) <code>#[MapRequestPayload]</code> (b) <code>#[MapQueryString]</code> (c) <code>#[MapQueryParameter]</code>",
+    "Les trois via <code>#[MapRequestPayload]</code>",
+    "Aucun : il faut lire <code>$request</code> à la main"
+  ],
+  correct:1,
+  exp:`<code>#[MapRequestPayload]</code> = corps (JSON/form) → DTO validé ; <code>#[MapQueryString]</code> = toute la <i>query string</i> → DTO ; <code>#[MapQueryParameter]</code> = un paramètre de query isolé et typé (<code>int $page</code>). (<code>#[MapEntity]</code>, lui, charge une entité depuis un paramètre de route.)`,
+  ref:["symfony.com — Request data mapping","https://symfony.com/doc/current/controller.html#mapping-query-parameters-individually"]
+},
+{
+  theme:"Contrôleurs · FOSRest → natif",
+  q:`En migrant un contrôleur FOSRest (<code>@Rest\\Get</code>, <code>@Rest\\View</code>) vers du Symfony natif, par quoi remplace-t-on ?`,
+  options:[
+    "Rien, FOSRest reste recommandé pour le neuf",
+    "Des attributs natifs : <code>#[Route(methods: ['GET'])]</code>, retour d'une <code>JsonResponse</code> (ou valeur sérialisée), helpers d'<code>AbstractController</code>",
+    "Des annotations Doctrine",
+    "Un EventSubscriber par route"
+  ],
+  correct:1,
+  exp:`Le natif moderne couvre l'essentiel de FOSRest : routing par <code>#[Route]</code> (avec <code>methods</code>), réponses via <code>JsonResponse</code>/Serializer (ou <code>#[Map*]</code> en entrée), helpers d'<code>AbstractController</code>. FOSRest reste surtout dans le legacy (cas du projet Helfrich).`,
+  ref:["symfony.com — Controller","https://symfony.com/doc/current/controller.html"]
+},
+{
+  theme:"Contrôleurs · Sécurité",
+  q:`Restreindre une action à <code>ROLE_ADMIN</code>. Forme la plus concise et déclarative ?`,
+  options:[
+    "Un <code>if (!$this->getUser()->isAdmin())</code> au début de l'action",
+    "L'attribut <code>#[IsGranted('ROLE_ADMIN')]</code> sur l'action (ou le contrôleur) ; l'équivalent impératif étant <code>denyAccessUnlessGranted('ROLE_ADMIN')</code>",
+    "Une route alternative non documentée",
+    "Un middleware HTTP maison"
+  ],
+  correct:1,
+  exp:`<code>#[IsGranted('ROLE_ADMIN')]</code> (sur la classe ou la méthode) déclare l'autorisation au plus près de l'action ; en impératif c'est <code>denyAccessUnlessGranted()</code>. On évite de tester les rôles à la main (<code>isAdmin()</code>), ce qui contourne le système de sécurité (voters, hiérarchie de rôles).`,
+  ref:["symfony.com — IsGranted attribute","https://symfony.com/doc/current/security.html#securing-controllers-and-other-code"]
+},
+{
+  theme:"Contrôleurs · Entité depuis la route",
+  q:`Charger automatiquement une entité <code>Article</code> depuis <code>/article/{id}</code>, en Symfony récent ?`,
+  options:[
+    "Le ParamConverter de SensioFrameworkExtraBundle, toujours la référence",
+    "Le <b>value resolver natif</b> : <code>#[MapEntity]</code> (ou résolution implicite par type + id) ; le ParamConverter de SensioFrameworkExtraBundle est <b>déprécié</b> au profit des resolvers",
+    "Charger manuellement via le repository, sans alternative",
+    "Un listener <code>kernel.controller</code> maison"
+  ],
+  correct:1,
+  exp:`La conversion route → entité passe désormais par les <b>argument value resolvers</b> natifs : <code>#[MapEntity]</code> (ou résolution auto si le type d'argument est une entité et que le paramètre matche l'id). <b>SensioFrameworkExtraBundle</b> (et son ParamConverter) est <b>déprécié</b> ; ses fonctionnalités ont rejoint le cœur.`,
+  ref:["symfony.com — MapEntity","https://symfony.com/doc/current/doctrine.html#automatically-fetching-objects-mapentity"]
+},
+{
+  theme:"Contrôleurs · ParamFetcher",
+  q:`Le projet utilise FOSRest <code>@QueryParam</code> + <code>ParamFetcher</code> pour lire/valider <code>?page</code>. Équivalent natif moderne ?`,
+  options:[
+    "Lire <code>$request->query->get('page')</code> sans validation",
+    "<code>#[MapQueryParameter] int $page = 1</code> : typage + valeur par défaut + 400 automatique si invalide, sans <code>ParamFetcher</code>",
+    "Un formulaire Symfony complet",
+    "Une route distincte par valeur"
+  ],
+  correct:1,
+  exp:`FOSRest <code>@QueryParam</code>/<code>ParamFetcher</code> déclarait nom, défaut, contraintes, et lisait via <code>$paramFetcher->get('page')</code>. Le natif <code>#[MapQueryParameter]</code> fait l'équivalent par <b>typage d'argument</b> (<code>int $page = 1</code>) : conversion, valeur par défaut, et 400 automatique si la valeur ne respecte pas le type.`,
+  ref:["symfony.com — MapQueryParameter","https://symfony.com/doc/current/controller.html#mapping-query-parameters-individually"]
+},
+/* ---------------------------------------------------------------- Messenger & workers */
+{
+  theme:"Messenger · Message/Handler",
+  q:`Dans Messenger, qu'est-ce qu'un message et qu'est-ce qu'un handler ?`,
+  options:[
+    "Le message contient la logique, le handler le transporte",
+    "Le <b>message</b> est un simple objet (DTO) décrivant une intention/un fait ; le <b>handler</b> (<code>#[AsMessageHandler]</code>) contient la logique exécutée quand le bus le dispatche",
+    "Les deux sont la même classe",
+    "Le handler est une route HTTP"
+  ],
+  correct:1,
+  exp:`Un <b>message</b> est un POPO immuable (données seulement : <code>SendInvoice($orderId)</code>). Le <b>handler</b> (classe <code>#[AsMessageHandler]</code> ou <code>__invoke</code>) porte le traitement, exécuté quand le <b>bus</b> dispatche le message. Séparation nette intention / exécution.`,
+  ref:["symfony.com — Messenger","https://symfony.com/doc/current/messenger.html"]
+},
+{
+  theme:"Messenger · Transport async",
+  q:`Vous voulez que l'envoi d'email se fasse en asynchrone via RabbitMQ. Comment, dans Messenger ?`,
+  options:[
+    "Appeler le handler directement dans le contrôleur",
+    "Router le message vers un <b>transport asynchrone</b> (DSN AMQP/RabbitMQ) ; un <b>worker</b> (<code>messenger:consume</code>) le consomme hors du cycle HTTP",
+    "Mettre l'email dans <code>kernel.terminate</code>",
+    "Un cron qui scanne la base"
+  ],
+  correct:1,
+  exp:`On <b>route</b> le message vers un transport async (<code>MESSENGER_TRANSPORT_DSN=amqp://…</code> pour RabbitMQ) ; le dispatch ne fait qu'<b>enfiler</b> le message, et un <b>worker</b> (<code>bin/console messenger:consume async</code>) l'exécute en arrière-plan. Le HTTP répond sans attendre l'envoi.`,
+  ref:["symfony.com — Messenger transports","https://symfony.com/doc/current/messenger.html#transports-async-queued-messages"]
+},
+{
+  theme:"Messenger · Retry / DLQ",
+  q:`Un handler échoue par intermittence (API tierce instable). Comportement Messenger recommandé ?`,
+  options:[
+    "Réessayer indéfiniment et immédiatement",
+    "Une <b>retry strategy</b> (max_retries, délai, multiplicateur) ; après épuisement, le message part dans un <b>failed transport</b> (dead-letter) pour inspection / rejeu",
+    "Supprimer le message au premier échec",
+    "Logguer et ignorer"
+  ],
+  correct:1,
+  exp:`Messenger applique une <b>politique de retry</b> (nombre max, délai croissant) pour absorber les pannes transitoires. Une fois les essais épuisés, le message est routé vers le <b>transport <code>failed</code></b> (dead-letter) : on l'inspecte (<code>messenger:failed:show</code>) et on le rejoue (<code>messenger:failed:retry</code>) au lieu de le perdre.`,
+  ref:["symfony.com — Retries & failures","https://symfony.com/doc/current/messenger.html#retries-failures"]
+},
+{
+  theme:"Messenger · Idempotence",
+  q:`Pourquoi un handler Messenger doit-il être idempotent ?`,
+  options:[
+    "Pour respecter le principe SOLID",
+    "Parce que la livraison est <b>at-least-once</b> : un message peut être <b>redélivré</b> (retry, crash après traitement mais avant ack) — le rejouer ne doit pas produire d'effet double (double débit, double email)",
+    "Parce que Messenger garantit l'exactly-once",
+    "Pour accélérer le worker"
+  ],
+  correct:1,
+  exp:`Les transports offrent au mieux du <b>at-least-once</b> : un crash entre le traitement et l'<i>ack</i>, ou un retry, peut <b>rejouer</b> le message. Un handler idempotent (clé d'unicité, vérification d'état, <code>DeduplicateStamp</code>) garantit qu'un même message rejoué n'a pas d'effet de bord multiple.`,
+  ref:["symfony.com — Messenger","https://symfony.com/doc/current/messenger.html"]
+},
+{
+  theme:"Messenger · Mémoire worker",
+  q:`Un worker <code>messenger:consume</code> qui tourne des jours voit sa mémoire grimper. Pratique recommandée ?`,
+  options:[
+    "Augmenter <code>memory_limit</code> à l'infini",
+    "Borner le worker (<code>--memory-limit</code>, <code>--time-limit</code>, <code>--limit</code>) et le laisser <b>redémarrer</b> (supervisor/systemd) ; Messenger réinitialise aussi les services entre messages",
+    "Désactiver le garbage collector",
+    "Redémarrer le serveur web"
+  ],
+  correct:1,
+  exp:`Un process PHP long accumule de la mémoire (entités managées, état). On <b>borne</b> le worker (<code>--memory-limit=128M</code>, <code>--time-limit=3600</code>, <code>--limit=1000</code>) : il s'arrête proprement et un superviseur (supervisor/systemd) le relance. Messenger <b>réinitialise</b> les services entre messages pour limiter les fuites.`,
+  ref:["symfony.com — Deploying / workers","https://symfony.com/doc/current/messenger.html#deploying-to-production"]
+},
+{
+  theme:"Messenger · Stamps",
+  q:`À quoi servent les Stamps dans Messenger (ex. <code>DelayStamp</code>) ?`,
+  options:[
+    "À chiffrer le message",
+    "Ce sont des <b>métadonnées</b> attachées à l'enveloppe pour piloter le parcours du message : <code>DelayStamp</code> (délai), <code>TransportNamesStamp</code> (transport ciblé), <code>BusNameStamp</code>, etc.",
+    "À définir quel handler exécuter, à la place de la config",
+    "À valider le contenu du message"
+  ],
+  correct:1,
+  exp:`Une <code>Envelope</code> transporte le message + des <b>Stamps</b> (métadonnées) : <code>DelayStamp</code> (différer l'exécution), <code>TransportNamesStamp</code> (router), <code>HandledStamp</code>, <code>BusNameStamp</code>, <code>RedeliveryStamp</code>… Ils pilotent routage / retry / délai sans modifier le message lui-même.`,
+  ref:["symfony.com — Envelopes & stamps","https://symfony.com/doc/current/messenger.html#messages-the-envelope"]
+}
+];
+
+/* ============================================================================ */
+const $ = s => document.querySelector(s);
+const KEYS = ["1","2","3","4"];
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+let idx = 0, score = 0, answered = false;
+const results = []; // {theme, correct:bool, q}
+
+function startPills(){
+  const themes = [...new Set(QUESTIONS.map(q=>q.theme.split(" · ")[0]))];
+  $("#startPills").innerHTML = themes.map(t=>`<span class="chip">${t}</span>`).join("")
+    + `<span class="chip">${QUESTIONS.length} questions</span>`;
+}
+function show(id){ ["start","quiz","end"].forEach(s=>$("#"+s).classList.toggle("hide", s!==id)); }
+
+function render(){
+  answered = false;
+  const item = QUESTIONS[idx];
+  $("#theme").textContent = item.theme;
+  $("#counter").textContent = `${idx+1} / ${QUESTIONS.length}`;
+  $("#prog").style.width = `${(idx)/QUESTIONS.length*100}%`;
+  $("#question").innerHTML = item.q;
+  $("#exp").className = "exp"; $("#exp").innerHTML = "";
+  $("#hint").textContent = "Choisis une réponse…";
+  $("#nextBtn").disabled = true;
+  $("#nextBtn").textContent = (idx === QUESTIONS.length-1) ? "Voir le résultat →" : "Suivant →";
+  const opts = $("#opts"); opts.innerHTML = "";
+  const order = shuffle([...item.options.keys()]); // ordre d'affichage aléatoire → pas de biais de position
+  order.forEach((orig,pos)=>{
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.dataset.orig = orig;
+    b.innerHTML = `<span class="key">${KEYS[pos]}</span><span>${item.options[orig]}</span>`;
+    b.onclick = ()=>choose(orig);
+    opts.appendChild(b);
+  });
+}
+
+function choose(i){
+  if(answered) return;
+  answered = true;
+  const item = QUESTIONS[idx];
+  const nodes = [...document.querySelectorAll(".opt")];
+  nodes.forEach(n=>{
+    const orig = +n.dataset.orig;
+    n.classList.add("locked");
+    if(orig===item.correct) n.classList.add("correct");
+    else if(orig===i) n.classList.add("wrong");
+    else n.classList.add("dim");
+  });
+  const good = i===item.correct;
+  if(good) score++;
+  results.push({theme:item.theme, correct:good, q:item.q});
+  const exp = $("#exp");
+  exp.className = "exp show";
+  exp.innerHTML =
+    `<div class="verdict ${good?'good':'bad'}">${good?'✓ Bonne réponse':'✗ Mauvaise réponse'}</div>`+
+    `<div>${item.exp}</div>`+
+    `<div class="ref">📖 ${item.ref[0]} — <a href="${item.ref[1]}" target="_blank" rel="noopener">doc</a></div>`;
+  $("#hint").textContent = `Score : ${score} / ${results.length}`;
+  $("#nextBtn").disabled = false;
+  $("#prog").style.width = `${(idx+1)/QUESTIONS.length*100}%`;
+}
+
+function next(){
+  if(!answered) return;
+  if(idx < QUESTIONS.length-1){ idx++; render(); }
+  else end();
+}
+
+function end(){
+  show("end");
+  $("#finalScore").textContent = `${score} / ${QUESTIONS.length}`;
+  const pct = Math.round(score/QUESTIONS.length*100);
+  let msg;
+  if(pct>=85) msg = "Excellent — les fondamentaux du Jour 3 sont solides. 🎯";
+  else if(pct>=65) msg = "Bon niveau global. Quelques points à revoir ci-dessous.";
+  else if(pct>=45) msg = "Base présente mais fragile : reprendre les notions manquées.";
+  else msg = "À consolider : reprendre le support du Jour 3 sur les thèmes ratés.";
+  $("#finalMsg").textContent = `${pct}% de bonnes réponses. ${msg}`;
+
+  // par thème
+  const groups = {};
+  results.forEach(r=>{
+    const t = r.theme.split(" · ")[0];
+    groups[t] = groups[t] || {ok:0,total:0};
+    groups[t].total++; if(r.correct) groups[t].ok++;
+  });
+  $("#byTheme").innerHTML = Object.entries(groups).map(([t,g])=>
+    `<div class="row"><span>${t}</span><span>${g.ok} / ${g.total}</span></div>`).join("");
+
+  // questions ratées
+  const missed = results.filter(r=>!r.correct);
+  $("#reviewWrap").innerHTML = missed.length
+    ? `<h3>À revoir (${missed.length})</h3>` + missed.map(r=>`<div class="item"><b>${r.theme}</b><br>${r.q}</div>`).join("")
+    : `<h3>Sans faute 🏆</h3><div class="item">Toutes les questions sont correctes.</div>`;
+}
+
+function restart(){ idx=0; score=0; results.length=0; render(); show("quiz"); }
+
+document.addEventListener("keydown", e=>{
+  if($("#quiz").classList.contains("hide")) return;
+  if(KEYS.includes(e.key)){ const pos=+e.key-1; const btn=document.querySelectorAll(".opt")[pos]; if(btn && !answered) choose(+btn.dataset.orig); }
+  if(e.key==="Enter" && answered) next();
+});
+$("#startBtn").onclick = ()=>{ render(); show("quiz"); };
+$("#nextBtn").onclick = next;
+$("#restartBtn").onclick = restart;
+startPills();
+</script>
+</body>
+</html>
