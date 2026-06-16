@@ -3,88 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QCM Symfony — Jour 1 · Helfrich × DonkeyCode</title>
+<title>Formation Symfony avancé — QCM · Helfrich × DonkeyCode</title>
 <style>
   :root{
     --bg:#0f1115; --card:#171a21; --card2:#1f232c; --line:#2a2f3a;
     --txt:#e7e9ee; --muted:#9aa3b2; --accent:#6aa6ff; --accent2:#8b5cf6;
-    --ok:#22c55e; --okbg:#0e2a18; --ko:#ef4444; --kobg:#2a1212;
-    --chip:#232838;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
     background:radial-gradient(1200px 600px at 50% -10%, #1a1f2b 0%, var(--bg) 60%);
     color:var(--txt); font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:32px 16px 80px;
+    min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:48px 16px 80px;
   }
-  .app{width:100%; max-width:860px}
-  header.top{display:flex; align-items:center; gap:12px; margin-bottom:22px}
-  .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));
-    display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b0d12}
-  header.top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
-  header.top .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 28px 24px;
-    box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .app{width:100%; max-width:820px}
+  header.top{display:flex; align-items:center; gap:14px; margin-bottom:10px}
+  .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b0d12;font-size:18px}
+  header.top h1{font-size:22px;margin:0;font-weight:800;letter-spacing:.2px}
+  header.top .sub{font-size:13px;color:var(--muted);margin-top:3px}
+  .intro{color:var(--muted);font-size:15px;max-width:640px;margin:14px 0 30px}
 
-  /* progress */
-  .bar{height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin:0 0 18px}
-  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease}
-  .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:13px;color:var(--muted)}
-  .chip{display:inline-block;background:var(--chip);color:#c9d4ea;border:1px solid var(--line);
-    padding:4px 11px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.2px}
-
-  .q{font-size:20px;font-weight:650;margin:6px 0 18px;line-height:1.4}
-  .q code, .opt code, .exp code{background:#0c0e13;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.9em;
-    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;color:#a8c7ff}
-  .opts{display:flex;flex-direction:column;gap:10px}
-  .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;cursor:pointer;
-    background:var(--card2);border:1.5px solid var(--line);border-radius:12px;padding:13px 15px;color:var(--txt);
-    font-size:15px;transition:border-color .15s,background .15s,transform .05s}
-  .opt:hover:not(.locked){border-color:#3a4356;background:#222735}
-  .opt:active:not(.locked){transform:translateY(1px)}
-  .opt .key{flex:0 0 26px;height:26px;border-radius:7px;background:#0c0e13;border:1px solid var(--line);
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--muted)}
-  .opt.correct{border-color:var(--ok);background:var(--okbg)}
-  .opt.correct .key{background:var(--ok);color:#06210f;border-color:var(--ok)}
-  .opt.wrong{border-color:var(--ko);background:var(--kobg)}
-  .opt.wrong .key{background:var(--ko);color:#2a0a0a;border-color:var(--ko)}
-  .opt.locked{cursor:default}
-  .opt.dim{opacity:.55}
-
-  .exp{margin-top:18px;border-left:3px solid var(--accent);background:#11151d;border-radius:0 12px 12px 0;
-    padding:14px 16px;font-size:14.5px;color:#d4dae6;display:none}
-  .exp.show{display:block;animation:fade .25s ease}
-  .exp .verdict{font-weight:700;margin-bottom:6px}
-  .exp .verdict.good{color:var(--ok)} .exp .verdict.bad{color:var(--ko)}
-  .exp .ref{margin-top:8px;font-size:12.5px;color:var(--muted)}
-  .exp .ref a{color:var(--accent)}
-  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-
-  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
-  .hint{font-size:12.5px;color:var(--muted)}
-  button.btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0d12;border:0;border-radius:11px;
-    padding:11px 20px;font-weight:700;font-size:14.5px;cursor:pointer;transition:opacity .15s,transform .05s}
-  button.btn:hover{opacity:.92} button.btn:active{transform:translateY(1px)}
-  button.btn[disabled]{opacity:.35;cursor:not-allowed}
-  button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
-
-  /* start / end */
-  .center{text-align:center}
-  .big{font-size:30px;font-weight:800;margin:6px 0 4px}
-  .lead{color:var(--muted);font-size:15px;max-width:620px;margin:0 auto 22px}
-  .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0 26px}
-  .score{font-size:54px;font-weight:850;background:linear-gradient(135deg,var(--accent),var(--accent2));
-    -webkit-background-clip:text;background-clip:text;color:transparent;margin:8px 0}
-  .bytheme{text-align:left;margin:20px auto;max-width:560px}
-  .bytheme .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px}
-  .bytheme .row span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
-  .review{text-align:left;margin:22px auto 0;max-width:640px}
-  .review h3{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:0 0 10px}
-  .review .item{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:9px;font-size:14px}
-  .review .item b{color:#ffd9d9;font-weight:600}
-  footer{margin-top:26px;text-align:center;color:var(--muted);font-size:12px}
-  .hide{display:none}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:680px){.grid{grid-template-columns:1fr}}
+  a.card{display:block;text-decoration:none;color:var(--txt);background:var(--card);
+    border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.35);
+    transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+  a.card:hover{transform:translateY(-3px);border-color:#3a4a6b;box-shadow:0 26px 60px rgba(0,0,0,.45)}
+  .card .day{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    color:#0b0d12;background:linear-gradient(135deg,var(--accent),var(--accent2));padding:4px 11px;border-radius:99px}
+  .card h2{margin:14px 0 6px;font-size:20px;font-weight:750}
+  .card p{margin:0 0 14px;color:var(--muted);font-size:14px}
+  .card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .card .tag{font-size:11.5px;color:#c9d4ea;background:#232838;border:1px solid var(--line);
+    padding:3px 9px;border-radius:99px}
+  .card .go{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;color:var(--accent);font-weight:600}
+  .card .count{color:var(--muted);font-weight:500}
+  .card.soon{opacity:.55;pointer-events:none;background:transparent;border-style:dashed}
+  .card.soon .day{background:#2a2f3a;color:#9aa3b2}
+  footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px}
+  footer a{color:var(--accent);text-decoration:none}
 </style>
 </head>
 <body>
@@ -92,551 +50,46 @@
   <header class="top">
     <div class="logo">DC</div>
     <div>
-      <h1>QCM Symfony — Jour 1</h1>
-      <div class="sub">Formation PHP / Symfony avancé · Helfrich × DonkeyCode · Vérification des acquis</div>
+      <h1>Formation Symfony — Avancé</h1>
+      <div class="sub">Bonnes pratiques PHP &amp; Symfony · Helfrich × DonkeyCode · QCM d'évaluation des acquis</div>
     </div>
   </header>
+  <p class="intro">Sélectionne la journée à évaluer. Chaque QCM est de niveau <b>avancé</b>
+     (façon préparation à une certification) : questions de mise en situation, distracteurs subtils,
+     correction immédiate et sourcée, ordre des réponses mélangé à chaque passage.</p>
 
-  <!-- START -->
-  <section id="start" class="card center">
-    <div class="big">Prêt à valider le Jour 1 ?</div>
-    <p class="lead">QCM de niveau <b>avancé</b>, façon préparation à une certification PHP/Symfony :
-       questions de jugement, distracteurs subtils, une seule bonne réponse, correction immédiate et sourcée.
-       Couvre le <b>typage & les pièges PHP</b>, <b>SOLID</b> en situation, les design patterns utiles,
-       <b>Composer/SemVer/PSR</b> et le cycle de vie d'une requête Symfony (Kernel & Events).</p>
-    <div class="pills" id="startPills"></div>
-    <button class="btn" id="startBtn">Commencer le QCM →</button>
-    <footer>Navigation clavier : touches <b>1–4</b> pour répondre · <b>Entrée</b> pour continuer</footer>
-  </section>
+  <div class="grid">
+    <a class="card" href="jour-1.html">
+      <span class="day">Jour 1</span>
+      <h2>Fondations PHP &amp; Symfony</h2>
+      <p>Typage &amp; pièges PHP, principes SOLID, design patterns utiles, Composer/SemVer/PSR et cycle de vie d'une requête.</p>
+      <div class="tags">
+        <span class="tag">PHP avancé</span><span class="tag">SOLID</span><span class="tag">Patterns</span>
+        <span class="tag">Composer / PSR</span><span class="tag">Kernel &amp; Events</span>
+      </div>
+      <div class="go"><span>Commencer →</span><span class="count">29 questions</span></div>
+    </a>
 
-  <!-- QUIZ -->
-  <section id="quiz" class="card hide">
-    <div class="bar"><i id="prog"></i></div>
-    <div class="meta">
-      <span class="chip" id="theme">—</span>
-      <span id="counter">1 / 1</span>
-    </div>
-    <div class="q" id="question"></div>
-    <div class="opts" id="opts"></div>
-    <div class="exp" id="exp"></div>
-    <div class="actions">
-      <span class="hint" id="hint">Choisis une réponse…</span>
-      <button class="btn" id="nextBtn" disabled>Suivant →</button>
-    </div>
-  </section>
+    <a class="card" href="jour-2.html">
+      <span class="day">Jour 2</span>
+      <h2>Services, données &amp; performance</h2>
+      <p>Injection de dépendances, architecture, Doctrine &amp; Propel, optimisation SQL et performance web (cache, routing).</p>
+      <div class="tags">
+        <span class="tag">Injection (DI)</span><span class="tag">Architecture</span><span class="tag">Doctrine &amp; Propel</span>
+        <span class="tag">SQL / Index</span><span class="tag">Perf web</span>
+      </div>
+      <div class="go"><span>Commencer →</span><span class="count">31 questions</span></div>
+    </a>
 
-  <!-- END -->
-  <section id="end" class="card center hide">
-    <div class="big">Résultat</div>
-    <div class="score" id="finalScore">0 / 0</div>
-    <p class="lead" id="finalMsg"></p>
-    <div class="bytheme" id="byTheme"></div>
-    <div class="review" id="reviewWrap"></div>
-    <div style="margin-top:26px">
-      <button class="btn ghost" id="restartBtn">↺ Recommencer</button>
+    <div class="card soon">
+      <span class="day">Jour 3</span>
+      <h2>Sérialisation, tests &amp; async</h2>
+      <p>Sérialisation, validation &amp; formulaires, tests PHPUnit, Clock/DatePoint, contrôleurs &amp; attributs, Messenger.</p>
+      <div class="go"><span>À venir</span><span class="count">—</span></div>
     </div>
-  </section>
+  </div>
+
+  <footer>Formation PHP / Symfony avancé · <a href="https://www.donkeycode.com/">DonkeyCode</a> × DonkeySchool</footer>
 </div>
-
-<script>
-/* ============================================================================
-   QCM Symfony — Jour 1 (slides 1–125)
-   Sources de vérité : php.net (migrations) + symfony.com (doc officielle)
-   Chaque question est opérationnelle : pas de théorie gratuite.
-   ========================================================================== */
-const QUESTIONS = [
-/* ---------------------------------------------------------------- PHP avancé */
-{
-  theme:"PHP · Typage",
-  q:`Un fichier <b>sans</b> <code>declare(strict_types=1)</code> contient <code>function qty(int $n): int { return $n; }</code>. Un appel <code>qty("5")</code> fait quoi ?`,
-  options:[
-    "Une <code>TypeError</code> : <code>\"5\"</code> est une chaîne, pas un int",
-    "Retourne <code>5</code> : en mode coercitif (par défaut), une chaîne numérique est convertie vers le type déclaré",
-    "Retourne <code>\"5\"</code> : le type de retour n'est pas vérifié à la sortie",
-    "Émet une <i>warning</i> de conversion puis retourne <code>5</code>"
-  ],
-  correct:1,
-  exp:`Par défaut PHP est en mode <b>coercitif</b> : une chaîne <i>numérique</i> est convertie vers le scalaire déclaré, sans erreur ni warning. C'est <code>declare(strict_types=1)</code> qui transforme cela en <code>TypeError</code> — et il s'applique au fichier <b>appelant</b>, pas au fichier qui déclare la fonction. Typer ne suffit donc pas à être strict.`,
-  ref:["php.net — Strict typing","https://www.php.net/manual/en/language.types.declarations.php#language.types.declarations.strict"]
-},
-{
-  theme:"PHP · Opérateurs",
-  q:`Avec <code>$cfg = ['port' => 0]</code>, que valent respectivement <code>$cfg['port'] ?? 8080</code> et <code>$cfg['port'] ?: 8080</code> ?`,
-  options:[
-    "Les deux valent <code>0</code>",
-    "<code>??</code> → <code>0</code> ; <code>?:</code> → <code>8080</code>",
-    "<code>??</code> → <code>8080</code> ; <code>?:</code> → <code>0</code>",
-    "Les deux valent <code>8080</code>"
-  ],
-  correct:1,
-  exp:`<code>??</code> ne se déclenche que sur null / clé absente : la clé existe et vaut <code>0</code> ⇒ <code>0</code>. <code>?:</code> teste la « falsy-ness » : <code>0</code> est <i>falsy</i> ⇒ il renvoie <code>8080</code>. D'où le bug classique de <code>?:</code> sur des valeurs légitimes <code>0</code> / <code>''</code> / <code>'0'</code> / <code>[]</code>. (Sur une clé <b>absente</b>, <code>?:</code> émettrait en plus un warning <i>Undefined array key</i> — PHP 8.0+ —, pas <code>??</code>.)`,
-  ref:["php.net — Comparison operators","https://www.php.net/manual/en/language.operators.comparison.php"]
-},
-{
-  theme:"PHP · Tri / comparaison",
-  q:`Dans un comparateur <code>usort</code>, pourquoi <code>fn($a,$b) => $a->price > $b->price</code> est-il un bug par rapport à <code>$a->price <=> $b->price</code> ?`,
-  options:[
-    "Aucune différence, les deux trient correctement",
-    "<code>></code> renvoie un bool ; un comparateur doit renvoyer un entier &lt;0/0/&gt;0 — renvoyer <code>false</code>(0) pour le cas « inférieur » le confond avec « égal » ⇒ tri incorrect",
-    "<code><=></code> est plus lent car il effectue trois comparaisons internes",
-    "<code>></code> ne fonctionne pas sur les propriétés d'objets"
-  ],
-  correct:1,
-  exp:`Un comparateur doit retourner <b>&lt;0 / 0 / &gt;0</b>. <code>></code> ne renvoie que <code>true</code>(1) ou <code>false</code>(0) : les cas « inférieur » et « égal » sont tous deux mappés sur 0 ⇒ tri faux/instable. <code><=></code> renvoie -1/0/1, exactement le contrat attendu. Retourner un bool d'un comparateur est d'ailleurs <b>déprécié depuis PHP 8.0</b>.`,
-  ref:["php.net — usort","https://www.php.net/manual/en/function.usort.php"]
-},
-{
-  theme:"PHP · match",
-  q:`<code>$x = '1'; echo match($x) { 1 => 'int', '1' => 'string', default => 'none' };</code> — qu'affiche ce code ?`,
-  options:[
-    "int",
-    "string",
-    "none",
-    "Erreur : deux bras ne peuvent pas représenter « la même » valeur"
-  ],
-  correct:1,
-  exp:`<code>match</code> compare en <b>strict</b> (<code>===</code>). <code>$x</code> vaut la chaîne <code>'1'</code> : le bras <code>1</code> (int) ne matche pas (<code>'1' === 1</code> est faux), c'est le bras <code>'1'</code> qui correspond ⇒ <b>string</b>. Avec un <code>switch</code> (comparaison lâche <code>==</code>), le bras <code>1</code> aurait matché en premier. C'est tout l'intérêt — et le piège — du strict.`,
-  ref:["php.net — match","https://www.php.net/manual/en/control-structures.match.php"]
-},
-{
-  theme:"PHP · match",
-  q:`Pour remplacer une cascade <code>if/elseif</code> qui classe un montant en tranches, on écrit :<br><code>match(true) { $amount < 100 => 'S', $amount < 500 => 'M', default => 'L' }</code>. Qu'est-ce qui est <b>exact</b> sur cette forme <code>match(true)</code> ?`,
-  options:[
-    "<code>match(true)</code> compare <code>true</code> à chaque expression de gauche en lâche (<code>==</code>)",
-    "Chaque expression à gauche de <code>=></code> est une condition booléenne ; <code>match</code> renvoie le bras dont la condition vaut <code>true</code> en premier — l'<b>ordre est significatif</b> (comme un <code>elseif</code>)",
-    "L'ordre des bras est sans importance car <code>match</code> est exhaustif",
-    "Il faut un <code>break</code> entre chaque tranche pour éviter le fall-through"
-  ],
-  correct:1,
-  exp:`La forme <code>match(true)</code> transforme une cascade <code>if/elseif</code> en <b>expression</b> : chaque condition à gauche est évaluée et <code>match</code> retourne le bras dont la condition est <b>identique à <code>true</code></b> (<code>=== true</code>), le <b>premier</b> qui matche en partant du haut. L'ordre compte donc (premier vrai gagné), et <code>default</code> couvre le reste pour éviter <code>\\UnhandledMatchError</code>. Pas de <code>break</code> : il n'y a pas de fall-through.`,
-  ref:["php.net — match (true)","https://www.php.net/manual/en/control-structures.match.php"]
-},
-{
-  theme:"PHP · Nullsafe",
-  q:`<code>$total = $cart?->getDiscount()->getAmount();</code> où <code>$cart</code> et le retour de <code>getDiscount()</code> peuvent être null. Ce code est-il sûr ?`,
-  options:[
-    "Oui : <code>?-></code> protège toute la chaîne jusqu'à <code>getAmount()</code>",
-    "Non : <code>?-></code> ne court-circuite que le maillon où il est posé ; si <code>getDiscount()</code> renvoie null, le <code>->getAmount()</code> non protégé lèvera une <code>Error</code>",
-    "Non : <code>?-></code> est interdit au-delà d'un seul niveau d'appel",
-    "Oui, à condition que <code>getDiscount()</code> ait un type de retour nullable"
-  ],
-  correct:1,
-  exp:`Le <code>?-></code> ne saute <b>que</b> le maillon qui le porte. Si <code>$cart</code> est null, la chaîne s'arrête (ok). Mais si <code>$cart</code> existe et que <code>getDiscount()</code> renvoie null, l'appel suivant <code>->getAmount()</code> (sans <code>?</code>) provoque une <code>Error</code>. Il faut <code>$cart?->getDiscount()?->getAmount()</code>.`,
-  ref:["php.net — Nullsafe operator","https://www.php.net/manual/en/language.oop5.basic.php#language.oop5.basic.nullsafe"]
-},
-{
-  theme:"PHP · Sécurité",
-  q:`Que garantit <b>exactement</b> <code>#[\\SensitiveParameter]</code> placé sur un paramètre <code>$password</code> ?`,
-  options:[
-    "Le paramètre est chiffré en mémoire pendant l'exécution",
-    "Sa valeur est masquée dans les <b>stack traces</b> / <code>debug_backtrace()</code> (remplacée par un <code>SensitiveParameterValue</code>), mais reste un argument normal par ailleurs",
-    "PHP interdit de logger cette variable où que ce soit dans le code",
-    "Le paramètre devient implicitement <code>readonly</code>"
-  ],
-  correct:1,
-  exp:`<code>#[\\SensitiveParameter]</code> (PHP 8.2) agit <b>uniquement</b> sur les traces (exceptions, <code>debug_backtrace()</code>) en remplaçant la valeur par <code>SensitiveParameterValue</code>. Il ne chiffre rien, n'empêche pas un <code>echo</code>/log explicite, et ne change pas la mutabilité. C'est une protection contre la <b>fuite passive</b> dans les traces — pas un coffre-fort.`,
-  ref:["php.net — SensitiveParameter","https://www.php.net/manual/en/class.sensitiveparameter.php"]
-},
-{
-  theme:"PHP · POO",
-  q:`<code>class Model { public static function create(): static { return new static(); } }</code> et <code>class User extends Model {}</code>. <code>User::create()</code> retourne une instance de quoi — et que changerait <code>new self()</code> ?`,
-  options:[
-    "<code>User</code> dans les deux cas : <code>self</code> et <code>static</code> sont équivalents en contexte statique",
-    "<code>new static()</code> → <code>User</code> (late static binding) ; <code>new self()</code> → <code>Model</code>, car <code>self</code> est lié à la classe de <b>définition</b>",
-    "<code>User</code> avec <code>static</code>, mais <code>self</code> provoquerait une erreur fatale",
-    "<code>Model</code> dans les deux cas"
-  ],
-  correct:1,
-  exp:`<b>Late static binding</b> : <code>static</code> résout vers la classe réellement <b>appelée</b> (<code>User</code>), <code>self</code> vers la classe où le code est <b>écrit</b> (<code>Model</code>). D'où l'usage de <code>static</code> dans les factories / API fluides pour que les sous-classes renvoient leur propre type.`,
-  ref:["php.net — Late Static Bindings","https://www.php.net/manual/en/language.oop5.late-static-bindings.php"]
-},
-{
-  theme:"PHP · Attributs",
-  q:`En migrant des annotations Doctrine (commentaires PHPDoc) vers les attributs natifs <code>#[...]</code>, quelle affirmation est juste — et quel « bénéfice » est en réalité un faux espoir ?`,
-  options:[
-    "Métadonnées natives lues par Reflection, validées par PHP (faute de frappe = erreur), sans la lib <code>doctrine/annotations</code> — mais ce n'est pas « plus rapide » par magie et ça reste PHP 8.0+",
-    "Les attributs sont ré-exécutés à chaque requête, ce qui les rend plus dynamiques",
-    "Les attributs suppriment tout besoin de cache de métadonnées",
-    "Les attributs sont rétro-compatibles et fonctionnent dès PHP 7.4"
-  ],
-  correct:0,
-  exp:`Vrais gains : du <b>code réel</b> (une erreur de syntaxe d'attribut est une erreur PHP, pas un commentaire silencieusement ignoré), lecture par <i>Reflection</i>, fin de la dépendance <code>doctrine/annotations</code>, support IDE / analyse statique. Faux espoirs : ce n'est pas plus rapide en soi (les métadonnées sont toujours mises en cache) et c'est <b>PHP 8.0+</b>, pas 7.4.`,
-  ref:["php.net — Attributes","https://www.php.net/manual/en/language.attributes.overview.php"]
-},
-{
-  theme:"PHP · POO",
-  q:`<code>public function __construct(private readonly LoggerInterface $logger) {}</code>. Quelle affirmation est exacte ?`,
-  options:[
-    "<code>readonly</code> rend aussi l'<b>objet</b> pointé immuable (le logger ne peut plus muter)",
-    "La propriété ne peut être assignée qu'une fois (au constructeur) ; mais on peut toujours appeler des méthodes mutantes sur l'objet <code>$logger</code> lui-même",
-    "La promotion de propriété est incompatible avec un type interface",
-    "<code>readonly</code> impose de fournir une valeur par défaut au paramètre"
-  ],
-  correct:1,
-  exp:`<code>readonly</code> verrouille la <b>référence</b> de la propriété (une seule affectation, dans le constructeur) : c'est une immuabilité <b>superficielle</b>, l'objet référencé reste mutable. La promotion fonctionne parfaitement avec une interface (idiome d'injection). (Promotion : PHP 8.0 ; <code>readonly</code> sur propriété : 8.1.)`,
-  ref:["php.net — readonly properties","https://www.php.net/manual/en/language.oop5.properties.php#language.oop5.properties.readonly-properties"]
-},
-/* ---------------------------------------------------------------- SOLID */
-{
-  theme:"SOLID · SRP",
-  q:`Quelle situation traduit le mieux une violation du <b>SRP</b> — et non un simple « gros fichier » ?`,
-  options:[
-    "Une classe de 600 lignes qui ne fait que du calcul de TVA",
-    "Un <code>InvoiceService</code> qui change quand la règle de calcul évolue <b>et</b> quand le format d'export PDF change : deux raisons de changer, portées par des acteurs différents",
-    "Une classe exposant 12 méthodes publiques",
-    "Une classe qui dépend de 4 autres services injectés"
-  ],
-  correct:1,
-  exp:`Le SRP parle de <b>raisons de changer</b> (idéalement un seul axe/acteur de changement par classe), pas de taille, de nombre de méthodes ni de dépendances. Deux motifs d'évolution indépendants (règle métier vs format d'export) dans la même classe = violation. Une grosse classe mono-responsabilité, elle, ne viole pas le SRP.`,
-  ref:["Wikipedia — SRP","https://en.wikipedia.org/wiki/Single-responsibility_principle"]
-},
-{
-  theme:"SOLID · OCP",
-  q:`Vous ajoutez un moyen de paiement via <code>PaypalPayment implements PaymentMethodInterface</code>. Pourtant le <code>PaymentProcessor</code> fait <code>match($type) { 'card' => …, 'sepa' => … }</code>. Qu'est-ce qui trahit <b>encore</b> une violation de l'OCP ?`,
-  options:[
-    "Rien : ajouter une classe d'implémentation suffit toujours à respecter l'OCP",
-    "Le <code>match($type)</code> central : chaque nouveau moyen oblige à <b>rouvrir</b> <code>PaymentProcessor</code>. Il faut résoudre l'implémentation par injection / locator (services taggés), pas par un switch",
-    "Le choix d'une interface plutôt qu'une classe abstraite",
-    "Le nommage <code>PaymentProcessor</code> au lieu de <code>PaymentManager</code>"
-  ],
-  correct:1,
-  exp:`Créer la classe ne suffit pas tant qu'un point central (<code>match</code>/<code>switch</code> sur le type) doit être <b>modifié</b> à chaque ajout : ce point reste ouvert à la modification. La réponse Symfony : <b>services taggés</b> + locator/registre pour résoudre l'implémentation sans toucher au processor.`,
-  ref:["symfony.com — Service tags","https://symfony.com/doc/current/service_container/tags.html"]
-},
-{
-  theme:"SOLID · LSP",
-  q:`Quelle redéfinition viole le plus clairement le <b>LSP</b> ?`,
-  options:[
-    "Un override qui <b>renforce une précondition</b> (accepte un sous-ensemble d'entrées plus restreint que le parent), cassant des appelants valides pour le parent",
-    "Un override qui restreint le type de retour vers un sous-type (covariance)",
-    "Un override qui ajoute du logging avant d'appeler <code>parent::</code>",
-    "Un override qui <b>assouplit</b> une postcondition (garantit davantage que le parent)"
-  ],
-  correct:0,
-  exp:`LSP : un sous-type doit accepter <b>au moins</b> ce que le parent accepte (préconditions non renforcées) et garantir <b>au moins</b> ce qu'il garantit (postconditions non affaiblies). Renforcer une précondition (refuser des entrées valides pour le parent) brise la substituabilité. La covariance du retour, le logging et le <i>renforcement</i> d'une postcondition restent licites.`,
-  ref:["Wikipedia — Liskov","https://en.wikipedia.org/wiki/Liskov_substitution_principle"]
-},
-{
-  theme:"SOLID · ISP",
-  q:`Un <code>RepositoryInterface</code> impose <code>find/save/delete/export</code>. Un repo <b>read-only</b> doit lever des exceptions sur <code>save/delete</code>. Quel refactor respecte l'ISP <b>sans casser</b> les appelants existants ?`,
-  options:[
-    "Retirer <code>save/delete</code> de l'interface (casse tous les repos read-write)",
-    "Scinder en <code>ReadRepositoryInterface</code> / <code>WriteRepositoryInterface</code> ; les repos read-write implémentent les deux, le read-only seulement la lecture",
-    "Garder l'interface et documenter que <code>save/delete</code> « peuvent lever une exception »",
-    "Faire hériter le repo read-only d'une classe abstraite avec des <code>save/delete</code> au corps vide"
-  ],
-  correct:1,
-  exp:`ISP = interfaces ciblées par client. On <b>compose</b> via des interfaces séparées (Read / Write) : rien ne casse côté read-write (ils implémentent l'union), et le read-only ne dépend plus de méthodes qu'il ne sait pas honorer. Lever des exceptions ou laisser des corps vides ne fait que déplacer le problème (et viole le LSP au passage).`,
-  ref:["Wikipedia — ISP","https://en.wikipedia.org/wiki/Interface_segregation_principle"]
-},
-{
-  theme:"SOLID · DIP",
-  q:`Un <code>ReportService</code> fait <code>new PdfRenderer()</code> dans son constructeur. Lequel de ces refactors respecte <b>vraiment</b> le DIP ?`,
-  options:[
-    "Remplacer par <code>PdfRendererFactory::create()</code> appelé dans le constructeur",
-    "Injecter une abstraction <code>RendererInterface</code> par le constructeur (le choix de l'implémentation remonte au conteneur)",
-    "Rendre <code>PdfRenderer</code> <code>final</code> et l'exposer en propriété publique",
-    "Récupérer le renderer via <code>$this->container->get(PdfRenderer::class)</code>"
-  ],
-  correct:1,
-  exp:`DIP = dépendre d'une <b>abstraction</b> et <b>inverser</b> qui décide de l'implémentation (le conteneur, pas la classe). La factory appelée en interne garde une dépendance concrète et la décision dans la classe ; le <code>$container->get()</code> est du <i>service location</i> (couplage au conteneur, anti-pattern). Seule l'injection de l'interface inverse réellement la dépendance.`,
-  ref:["symfony.com — Service Container","https://symfony.com/doc/current/service_container.html"]
-},
-/* ---------------------------------------------------------------- Patterns (opérationnels) */
-{
-  theme:"Patterns · Adapter vs Facade",
-  q:`Vous exposez le SDK d'un prestataire de paiement à votre code via <b>votre</b> interface <code>PaymentGatewayInterface</code>, pour pouvoir changer de prestataire plus tard. Adapter ou Facade ?`,
-  options:[
-    "Facade : son rôle est de simplifier une API complexe",
-    "Adapter : il fait <b>correspondre</b> l'API tierce à une interface que VOUS imposez (substituabilité / drivers interchangeables) ; la Facade ne fait que simplifier, sans contrat de substitution",
-    "Singleton : pour partager une unique connexion au prestataire",
-    "Decorator : pour ajouter des fonctionnalités au SDK"
-  ],
-  correct:1,
-  exp:`Discriminant : l'<b>Adapter</b> vise la <b>conformité à une interface cible</b> (la vôtre) ⇒ implémentations interchangeables, on peut changer de gateway. La <b>Facade</b> vise la <b>simplification</b> d'un sous-système, sans promesse de substituabilité. Le besoin (« changer de prestataire ») tranche pour l'Adapter.`,
-  ref:["refactoring.guru — Adapter","https://refactoring.guru/design-patterns/adapter"]
-},
-{
-  theme:"Patterns · Factory vs Strategy",
-  q:`Vous voulez instancier le bon <code>NotificationSender</code> (email, SMS, push) selon un type reçu à l'exécution, en masquant la création aux appelants. Quel pattern — et quel piège éviter ?`,
-  options:[
-    "Factory : centraliser la création derrière une interface commune ; piège = y mettre de la logique métier, elle ne doit que construire/choisir",
-    "Builder : pour configurer chaque sender étape par étape",
-    "Strategy : elle n'instancie rien, elle <b>exécute</b> un comportement déjà choisi",
-    "Adapter : pour convertir une API tierce vers la vôtre"
-  ],
-  correct:0,
-  exp:`<b>Factory</b> : produit/choisit une implémentation derrière une interface et masque la création. Distinctions fines : le <b>Builder</b> assemble pas-à-pas un objet complexe (autre besoin), la <b>Strategy</b> n'instancie pas — elle encapsule un algorithme interchangeable déjà fourni. Piège classique : noyer de la logique métier dans la factory.`,
-  ref:["refactoring.guru — Factory Method","https://refactoring.guru/design-patterns/factory-method"]
-},
-{
-  theme:"Patterns · Observer",
-  q:`Vous voulez que plusieurs traitements réagissent à « un utilisateur s'est inscrit » sans que le code d'inscription les connaisse (EventDispatcher). Quelle <b>limite</b> faut-il avoir en tête ?`,
-  options:[
-    "Les écouteurs s'exécutent de façon <b>asynchrone</b>, dans un worker séparé",
-    "Le couplage devient implicite : flux moins lisible/traçable, et l'ordre d'exécution dépend des <b>priorités</b> — le tout reste <b>synchrone</b> par défaut",
-    "L'EventDispatcher garantit qu'un seul écouteur peut répondre à un événement",
-    "Un événement ne peut pas transporter de données (payload)"
-  ],
-  correct:1,
-  exp:`C'est l'<b>Observer</b> (l'émetteur ignore les abonnés). À savoir : c'est <b>synchrone</b> par défaut (pour de l'asynchrone durable ⇒ Messenger), l'ordre dépend des <b>priorités</b>, plusieurs écouteurs peuvent répondre, et le découplage a un coût de lisibilité/traçabilité. Le distracteur « async garanti » est le piège.`,
-  ref:["symfony.com — EventDispatcher","https://symfony.com/doc/current/components/event_dispatcher.html"]
-},
-{
-  theme:"Patterns · DTO vs Groups",
-  q:`API exposant <code>Order</code>. Quel critère fait <b>basculer</b> des groupes de sérialisation (sur l'entité) vers un <code>OrderSummaryDTO</code> dédié ?`,
-  options:[
-    "L'entité <code>Order</code> a beaucoup de champs",
-    "Le contrat de sortie doit rester <b>stable</b> malgré les refactors d'entités, agréger/renommer des champs de plusieurs entités, ou coexister en versions (V1/V2)",
-    "On veut éviter d'écrire une classe supplémentaire",
-    "On utilise Doctrine plutôt que Propel"
-  ],
-  correct:1,
-  exp:`Le DTO se justifie quand le <b>contrat public</b> doit être découplé du modèle de persistance : stabilité face aux refactors, agrégation/renommage/projection, versionnement propre (V1/V2), non-fuite de champs sensibles. Les groupes restent ok pour 2-3 variations légères collées à l'entité. La taille de l'entité ou l'ORM utilisé ne sont pas des critères.`,
-  ref:["symfony.com — Mapping to a typed object","https://symfony.com/doc/current/controller.html#mapping-the-request-to-a-typed-object"]
-},
-/* ---------------------------------------------------------------- Composer / PSR / SemVer */
-{
-  theme:"Composer · SemVer",
-  q:`<code>"acme/sdk": "^0.4"</code> dans <code>composer.json</code>. Quelle plage Composer applique-t-il ?`,
-  options:[
-    "&gt;=0.4.0 &lt;1.0.0",
-    "&gt;=0.4.0 &lt;0.5.0 : avant 1.0, le caret se bloque sur le segment significatif suivant (la mineure)",
-    "Exactement 0.4.0",
-    "&gt;=0.4.0 &lt;0.4.1"
-  ],
-  correct:1,
-  exp:`Piège classique : pour les versions <b>&lt;1.0</b> (API réputée instable), <code>^0.4</code> = <b>&gt;=0.4.0 &lt;0.5.0</b> (et <code>^0.4.2</code> = &gt;=0.4.2 &lt;0.5.0). Le caret ne « monte » donc pas jusqu'à 1.0 sur du 0.x. Sur du &gt;=1.0, <code>^1.4</code> = &gt;=1.4.0 &lt;2.0.0.`,
-  ref:["getcomposer.org — Versions (caret)","https://getcomposer.org/doc/articles/versions.md#caret-version-range-"]
-},
-{
-  theme:"Composer · SemVer",
-  q:`Quelle est la différence de plage entre <code>"~2.5"</code> et <code>"~2.5.1"</code> ?`,
-  options:[
-    "Identiques : &gt;=2.5.0 &lt;3.0.0",
-    "<code>~2.5</code> = &gt;=2.5.0 &lt;3.0.0 (la mineure peut monter) ; <code>~2.5.1</code> = &gt;=2.5.1 &lt;2.6.0 (seuls les patchs montent)",
-    "<code>~2.5</code> = &gt;=2.5.0 &lt;2.6.0 ; <code>~2.5.1</code> = &gt;=2.5.1 &lt;3.0.0",
-    "Les deux sont équivalents à <code>^2.5</code>"
-  ],
-  correct:1,
-  exp:`Le tilde laisse monter le <b>dernier</b> segment indiqué : avec 2 segments (<code>~2.5</code>) la mineure monte (&lt;3.0) ; avec 3 segments (<code>~2.5.1</code>) seul le patch monte (&lt;2.6). C'est précisément ce qui le distingue du caret, et la source de confusion la plus fréquente.`,
-  ref:["getcomposer.org — Versions (tilde)","https://getcomposer.org/doc/articles/versions.md#tilde-version-range-"]
-},
-{
-  theme:"Composer · CI",
-  q:`En CI, <code>composer install</code> échoue avec « <i>composer.lock is not up to date with the latest changes in composer.json</i> ». Cause la plus probable ?`,
-  options:[
-    "Le lock est corrompu, il faut le supprimer puis relancer",
-    "Quelqu'un a modifié <code>composer.json</code> (contraintes) sans régénérer <code>composer.lock</code> ; <code>install</code> refuse de deviner et exige un <code>update</code> committé",
-    "La version de PHP de la CI est trop récente pour le lock",
-    "<code>install</code> télécharge toujours les dernières versions et a rencontré un conflit"
-  ],
-  correct:1,
-  exp:`<code>composer install</code> installe <b>exactement</b> le lock et vérifie sa cohérence avec le hash de <code>composer.json</code>. Un <code>composer.json</code> modifié sans <code>composer update</code> (lock désynchronisé) fait échouer la CI — c'est <b>voulu</b> : la reproductibilité prime sur la débrouille. Le correctif : régénérer puis committer le lock.`,
-  ref:["getcomposer.org — install","https://getcomposer.org/doc/03-cli.md#install-i"]
-},
-{
-  theme:"Composer · Lock",
-  q:`Faut-il committer <code>composer.lock</code> dans Git ?`,
-  options:[
-    "Toujours, pour tout projet PHP sans exception",
-    "Pour une <b>application</b> : oui (build reproductible) ; pour une <b>librairie</b> distribuée : non, c'est l'appli consommatrice qui fige les versions",
-    "Jamais : il est régénéré au déploiement",
-    "Seulement si on épingle des versions exactes dans <code>composer.json</code>"
-  ],
-  correct:1,
-  exp:`Distinction clé : <b>appli</b> ⇒ on committe le lock (dev / CI / prod identiques via <code>install</code>). <b>Lib</b> ⇒ on ne le committe pas : le lock d'une lib n'est pas utilisé par ses consommateurs et masquerait des incompatibilités de versions chez eux.`,
-  ref:["getcomposer.org — Commit your lock","https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control"]
-},
-{
-  theme:"Composer · PSR",
-  q:`Le namespace <code>App\\Service\\Mailer</code> doit se résoudre vers <code>src/Service/Mailer.php</code>. Quelle norme régit ce mapping — et quel est le rôle de PSR-12 ?`,
-  options:[
-    "PSR-4 pour l'autoloading (préfixe de namespace ↦ répertoire) ; PSR-12 régit le <b>style de code</b>, sans lien avec l'autoloading",
-    "PSR-0, toujours recommandé pour les nouveaux projets",
-    "PSR-12 gère l'autoloading, PSR-4 le style de code",
-    "PSR-7, puisqu'il s'agit de résoudre une requête entrante"
-  ],
-  correct:0,
-  exp:`<b>PSR-4</b> = autoloading moderne (préfixe ↦ répertoire de base), généré par Composer ; <b>PSR-0</b> est déprécié. <b>PSR-12</b> = style de code (successeur de PSR-2), aucun rapport avec l'autoloading. PSR-7 = messages HTTP. Savoir « qui fait quoi » évite les confusions classiques entre normes.`,
-  ref:["php-fig.org — PSR-4","https://www.php-fig.org/psr/psr-4/"]
-},
-/* ---------------------------------------------------------------- Symfony Kernel & Events */
-{
-  theme:"Symfony · Kernel",
-  q:`Ordre correct, sur un cycle requête → réponse nominal, de : <code>kernel.terminate</code>, <code>kernel.request</code>, <code>kernel.response</code>, <code>kernel.controller</code>, <code>kernel.finish_request</code> ?`,
-  options:[
-    "request → controller → response → terminate → finish_request",
-    "request → controller → response → finish_request → terminate",
-    "request → controller → finish_request → response → terminate",
-    "controller → request → response → finish_request → terminate"
-  ],
-  correct:1,
-  exp:`request → controller (→ controller_arguments) → [contrôleur] → (view si pas de Response) → <b>response</b> → <b>finish_request</b> → <b>terminate</b>. Pièges : <code>finish_request</code> vient <b>après</b> <code>response</code> mais <b>avant</b> <code>terminate</code>, lequel s'exécute une fois la réponse <b>envoyée</b> au client.`,
-  ref:["symfony.com — Kernel events","https://symfony.com/doc/current/reference/events.html"]
-},
-{
-  theme:"Symfony · Kernel",
-  q:`Envoyer un e-mail de bienvenue <b>après</b> avoir renvoyé la réponse, sans ralentir la requête : pourquoi <code>kernel.terminate</code> et pas <code>kernel.response</code> ?`,
-  options:[
-    "<code>kernel.response</code> ne permet pas de modifier la réponse",
-    "<code>kernel.response</code> s'exécute <b>avant</b> l'envoi (il peut encore modifier la réponse) ⇒ y faire du lourd ralentit la requête ; <code>kernel.terminate</code> s'exécute <b>après</b> l'envoi",
-    "<code>kernel.terminate</code> s'exécute de façon asynchrone, dans un worker séparé",
-    "<code>kernel.response</code> n'est déclenché que pour les réponses JSON"
-  ],
-  correct:1,
-  exp:`<code>kernel.response</code> précède l'envoi (dernier point pour modifier headers/contenu) — y faire du lourd ralentit le client. <code>kernel.terminate</code> survient <b>après</b> l'envoi ⇒ post-traitement non bloquant. Attention : c'est toujours le <b>même process</b> (pas un worker) ; pour du vrai async durable ⇒ Messenger. Le « async/worker » est le piège.`,
-  ref:["symfony.com — kernel.terminate","https://symfony.com/doc/current/reference/events.html#kernel-terminate"]
-},
-{
-  theme:"Symfony · Kernel",
-  q:`Un contrôleur API retourne <code>$this->json($data)</code> dans un cas et un simple <code>array</code> dans l'autre. Lequel déclenche <code>kernel.view</code> ?`,
-  options:[
-    "Les deux, car c'est une réponse d'API",
-    "Celui qui retourne un <code>array</code> : <code>kernel.view</code> n'est déclenché que si le contrôleur ne renvoie <b>pas</b> un objet <code>Response</code> ; <code>$this->json()</code> en renvoie déjà un",
-    "Celui qui retourne <code>$this->json()</code>",
-    "Aucun : <code>kernel.view</code> ne concerne que les vues Twig"
-  ],
-  correct:1,
-  exp:`<code>kernel.view</code> ne se déclenche que lorsque le contrôleur <b>ne renvoie pas</b> de <code>Response</code> : un listener convertit alors la valeur retournée (array, objet…) en réponse. <code>$this->json()</code> renvoie déjà une <code>JsonResponse</code> ⇒ pas de <code>kernel.view</code>. Rien à voir avec Twig.`,
-  ref:["symfony.com — kernel.view","https://symfony.com/doc/current/reference/events.html#kernel-view"]
-},
-{
-  theme:"Symfony · Kernel",
-  q:`Dans un listener sur <code>kernel.exception</code>, comment renvoyer une réponse d'erreur JSON normalisée ?`,
-  options:[
-    "Lever une nouvelle exception depuis le listener",
-    "Appeler <code>$event->setResponse(new JsonResponse(...))</code> : fournir une Response court-circuite la page d'erreur par défaut",
-    "Retourner la Response depuis la méthode du listener (Symfony l'utilise automatiquement)",
-    "Modifier <code>$event->getRequest()</code> pour y injecter le code HTTP"
-  ],
-  correct:1,
-  exp:`Sur <code>kernel.exception</code>, on appelle <code>$event-&gt;setResponse(...)</code> : dès qu'une Response est fournie, Symfony l'utilise et arrête la propagation. Le <b>retour</b> de la méthode du listener est <b>ignoré</b> (piège classique). On y construit le payload d'erreur API (status, type, message).`,
-  ref:["symfony.com — kernel.exception","https://symfony.com/doc/current/reference/events.html#kernel-exception"]
-},
-{
-  theme:"Symfony · Events",
-  q:`Quand préférer un <b>EventSubscriber</b> à un <b>EventListener</b> configuré par tag ?`,
-  options:[
-    "Quand on cherche un gain de performance à l'exécution",
-    "Quand on veut que la classe <b>déclare elle-même</b> ses événements/priorités via <code>getSubscribedEvents()</code> — portable et versionnable, idéal en bundle ; le listener par tag est mieux pour brancher un événement sur un service sans modifier sa classe",
-    "Quand on a besoin de fixer une priorité, impossible avec un listener",
-    "Quand l'événement est déclenché plus de N fois par requête"
-  ],
-  correct:1,
-  exp:`Choix de conception, pas de performance : le <b>Subscriber</b> embarque sa config (<code>getSubscribedEvents()</code>) ⇒ auto-suffisant, parfait en bundle réutilisable. Le <b>Listener</b> par tag (<code>kernel.event_listener</code>) découple la config du code ⇒ utile pour brancher du comportement sur un service tiers. Les <b>deux</b> peuvent fixer une priorité (distracteur faux).`,
-  ref:["symfony.com — Events & Listeners","https://symfony.com/doc/current/event_dispatcher.html"]
-}
-];
-
-/* ============================================================================ */
-const $ = s => document.querySelector(s);
-const KEYS = ["1","2","3","4"];
-function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-let idx = 0, score = 0, answered = false;
-const results = []; // {theme, correct:bool, q}
-
-function startPills(){
-  const themes = [...new Set(QUESTIONS.map(q=>q.theme.split(" · ")[0]))];
-  $("#startPills").innerHTML = themes.map(t=>`<span class="chip">${t}</span>`).join("")
-    + `<span class="chip">${QUESTIONS.length} questions</span>`;
-}
-function show(id){ ["start","quiz","end"].forEach(s=>$("#"+s).classList.toggle("hide", s!==id)); }
-
-function render(){
-  answered = false;
-  const item = QUESTIONS[idx];
-  $("#theme").textContent = item.theme;
-  $("#counter").textContent = `${idx+1} / ${QUESTIONS.length}`;
-  $("#prog").style.width = `${(idx)/QUESTIONS.length*100}%`;
-  $("#question").innerHTML = item.q;
-  $("#exp").className = "exp"; $("#exp").innerHTML = "";
-  $("#hint").textContent = "Choisis une réponse…";
-  $("#nextBtn").disabled = true;
-  $("#nextBtn").textContent = (idx === QUESTIONS.length-1) ? "Voir le résultat →" : "Suivant →";
-  const opts = $("#opts"); opts.innerHTML = "";
-  const order = shuffle([...item.options.keys()]); // ordre d'affichage aléatoire → pas de biais de position
-  order.forEach((orig,pos)=>{
-    const b = document.createElement("button");
-    b.className = "opt";
-    b.dataset.orig = orig;
-    b.innerHTML = `<span class="key">${KEYS[pos]}</span><span>${item.options[orig]}</span>`;
-    b.onclick = ()=>choose(orig);
-    opts.appendChild(b);
-  });
-}
-
-function choose(i){
-  if(answered) return;
-  answered = true;
-  const item = QUESTIONS[idx];
-  const nodes = [...document.querySelectorAll(".opt")];
-  nodes.forEach(n=>{
-    const orig = +n.dataset.orig;
-    n.classList.add("locked");
-    if(orig===item.correct) n.classList.add("correct");
-    else if(orig===i) n.classList.add("wrong");
-    else n.classList.add("dim");
-  });
-  const good = i===item.correct;
-  if(good) score++;
-  results.push({theme:item.theme, correct:good, q:item.q});
-  const exp = $("#exp");
-  exp.className = "exp show";
-  exp.innerHTML =
-    `<div class="verdict ${good?'good':'bad'}">${good?'✓ Bonne réponse':'✗ Mauvaise réponse'}</div>`+
-    `<div>${item.exp}</div>`+
-    `<div class="ref">📖 ${item.ref[0]} — <a href="${item.ref[1]}" target="_blank" rel="noopener">doc</a></div>`;
-  $("#hint").textContent = `Score : ${score} / ${results.length}`;
-  $("#nextBtn").disabled = false;
-  $("#prog").style.width = `${(idx+1)/QUESTIONS.length*100}%`;
-}
-
-function next(){
-  if(!answered) return;
-  if(idx < QUESTIONS.length-1){ idx++; render(); }
-  else end();
-}
-
-function end(){
-  show("end");
-  $("#finalScore").textContent = `${score} / ${QUESTIONS.length}`;
-  const pct = Math.round(score/QUESTIONS.length*100);
-  let msg;
-  if(pct>=85) msg = "Excellent — les fondamentaux du Jour 1 sont solides. 🎯";
-  else if(pct>=65) msg = "Bon niveau global. Quelques points à revoir ci-dessous.";
-  else if(pct>=45) msg = "Base présente mais fragile : reprendre les notions manquées.";
-  else msg = "À consolider : reprendre le support du Jour 1 sur les thèmes ratés.";
-  $("#finalMsg").textContent = `${pct}% de bonnes réponses. ${msg}`;
-
-  // par thème
-  const groups = {};
-  results.forEach(r=>{
-    const t = r.theme.split(" · ")[0];
-    groups[t] = groups[t] || {ok:0,total:0};
-    groups[t].total++; if(r.correct) groups[t].ok++;
-  });
-  $("#byTheme").innerHTML = Object.entries(groups).map(([t,g])=>
-    `<div class="row"><span>${t}</span><span>${g.ok} / ${g.total}</span></div>`).join("");
-
-  // questions ratées
-  const missed = results.filter(r=>!r.correct);
-  $("#reviewWrap").innerHTML = missed.length
-    ? `<h3>À revoir (${missed.length})</h3>` + missed.map(r=>`<div class="item"><b>${r.theme}</b><br>${r.q}</div>`).join("")
-    : `<h3>Sans faute 🏆</h3><div class="item">Toutes les questions sont correctes.</div>`;
-}
-
-function restart(){ idx=0; score=0; results.length=0; render(); show("quiz"); }
-
-document.addEventListener("keydown", e=>{
-  if($("#quiz").classList.contains("hide")) return;
-  if(KEYS.includes(e.key)){ const pos=+e.key-1; const btn=document.querySelectorAll(".opt")[pos]; if(btn && !answered) choose(+btn.dataset.orig); }
-  if(e.key==="Enter" && answered) next();
-});
-$("#startBtn").onclick = ()=>{ render(); show("quiz"); };
-$("#nextBtn").onclick = next;
-$("#restartBtn").onclick = restart;
-startPills();
-</script>
 </body>
 </html>
