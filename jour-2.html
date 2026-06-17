@@ -489,6 +489,19 @@ const QUESTIONS = [
   exp:`<b>INNER JOIN</b> ne renvoie que les lignes ayant une correspondance des <b>deux</b> côtés ⇒ les clients sans commande disparaissent. <b>LEFT (OUTER) JOIN</b> conserve toutes les lignes de la table de <b>gauche</b> (clients), avec <code>NULL</code> côté droit si aucun match. Piège classique : un filtre sur la table de droite placé dans le <code>WHERE</code> (<code>WHERE orders.status='paid'</code>) élimine les <code>NULL</code> et annule l'effet du LEFT JOIN ⇒ il faut le mettre dans le <code>ON</code> : <code>LEFT JOIN orders o ON o.customer_id = c.id AND o.status='paid'</code>.`,
   ref:["dev.mysql.com — JOIN syntax","https://dev.mysql.com/doc/refman/8.0/en/join.html"]
 },
+{
+  theme:"SQL · NULL",
+  q:`<code>WHERE deleted_at = NULL</code> ne renvoie jamais de ligne, alors que des lignes ont bien <code>deleted_at</code> à NULL. Pourquoi — et quel est le coût de filtrer les NULL ?`,
+  options:[
+    "Un bug de l'optimiseur : il suffit d'ajouter un index pour corriger",
+    "En logique ternaire SQL, <code>= NULL</code> vaut toujours UNKNOWN (jamais TRUE) ⇒ 0 ligne : il faut <code>IS NULL</code> ; et pour que <code>WHERE deleted_at IS NULL</code> soit performant sur une grosse table, la colonne doit être indexée (les NULL <b>sont</b> indexés en MySQL/InnoDB), sinon c'est un full scan",
+    "Il faut comparer avec <code>= ''</code> à la place de NULL",
+    "NULL n'est jamais stocké, donc la ligne n'existe pas réellement"
+  ],
+  correct:1,
+  exp:`SQL utilise une <b>logique à trois valeurs</b> (TRUE/FALSE/UNKNOWN) : <code>x = NULL</code> (et <code>x != NULL</code>) renvoie toujours UNKNOWN, jamais TRUE ⇒ aucune ligne, sans erreur. On filtre avec <code>IS NULL</code> / <code>IS NOT NULL</code>. Côté coût : <code>WHERE deleted_at IS NULL</code> sans index sur la colonne = <b>full table scan</b> ; en MySQL/InnoDB les NULL <b>sont</b> indexés, donc un index (ou un index partiel/filtré là où c'est supporté, ex. PostgreSQL) rend un filtre <b>sélectif</b> efficace. À l'inverse, <code>IS NOT NULL</code> peu sélectif (la majorité des lignes) ne profite souvent pas de l'index.`,
+  ref:["dev.mysql.com — Working with NULL","https://dev.mysql.com/doc/refman/8.0/en/working-with-null.html"]
+},
 /* ---------------------------------------------------------------- Performance web (routing + cache) */
 {
   theme:"Perf web · Routing",
