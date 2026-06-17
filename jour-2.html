@@ -476,6 +476,19 @@ const QUESTIONS = [
   exp:`<code>OFFSET n</code> oblige le moteur à <b>lire puis ignorer</b> n lignes : coût croissant avec la profondeur. La <b>keyset pagination</b> (seek method) repart du dernier identifiant vu (<code>WHERE id < :last … LIMIT 20</code>) sur une colonne <b>indexée</b> ⇒ coût quasi constant, indépendant de la page.`,
   ref:["use-the-index-luke.com — Pagination","https://use-the-index-luke.com/no-offset"]
 },
+{
+  theme:"SQL · Jointures",
+  q:`Vous voulez lister <b>tous</b> les clients avec leur nombre de commandes, <b>y compris ceux qui n'en ont aucune</b>. Quelle jointure — et quel piège ?`,
+  options:[
+    "<code>INNER JOIN orders</code> : il renvoie de toute façon tous les clients",
+    "<code>LEFT JOIN orders</code> : il garde toutes les lignes de gauche (clients) avec <code>NULL</code> si pas de commande ; piège : un filtre sur la table de droite mis dans le <code>WHERE</code> (ex. <code>orders.status='paid'</code>) le retransforme en INNER JOIN — la condition doit aller dans le <code>ON</code>",
+    "<code>RIGHT JOIN clients</code> pour inverser le sens",
+    "<code>INNER JOIN</code> + <code>COALESCE</code> sur le compte"
+  ],
+  correct:1,
+  exp:`<b>INNER JOIN</b> ne renvoie que les lignes ayant une correspondance des <b>deux</b> côtés ⇒ les clients sans commande disparaissent. <b>LEFT (OUTER) JOIN</b> conserve toutes les lignes de la table de <b>gauche</b> (clients), avec <code>NULL</code> côté droit si aucun match. Piège classique : un filtre sur la table de droite placé dans le <code>WHERE</code> (<code>WHERE orders.status='paid'</code>) élimine les <code>NULL</code> et annule l'effet du LEFT JOIN ⇒ il faut le mettre dans le <code>ON</code> : <code>LEFT JOIN orders o ON o.customer_id = c.id AND o.status='paid'</code>.`,
+  ref:["dev.mysql.com — JOIN syntax","https://dev.mysql.com/doc/refman/8.0/en/join.html"]
+},
 /* ---------------------------------------------------------------- Performance web (routing + cache) */
 {
   theme:"Perf web · Routing",
